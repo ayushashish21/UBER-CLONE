@@ -23,13 +23,18 @@ const UserSignup = () => {
             password: password,
         };
 
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/register`, newUser);
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/register`, newUser);
 
-        if (response.status === 201) {
-            const data = response.data;
-            setUser(data.user);
-            localStorage.setItem('token', data.token);
-            navigate('/home');
+            if (response.status === 201) {
+                const data = response.data;
+                setUser(data.user);
+                localStorage.setItem('token', data.token);
+                navigate('/home');
+            }
+        } catch (error) {
+            console.error('Signup error:', error.response?.data || error.message);
+            alert('Signup failed. Please try again.');
         }
 
         setEmail('');
