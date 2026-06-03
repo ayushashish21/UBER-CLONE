@@ -4,8 +4,13 @@ const blackListTokenModel = require('../models/blackListToken.model');
 const { validationResult } = require('express-validator');
 
 
+/**
+ * Register a new captain
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
 module.exports.registerCaptain = async (req, res, next) => {
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -16,7 +21,6 @@ module.exports.registerCaptain = async (req, res, next) => {
     const isCaptainAlreadyExist = await captainModel.findOne({ email });
 
     if (isCaptainAlreadyExist) {
-
         return res.status(400).json({ message: 'Captain already exist' });
     }
 
@@ -38,7 +42,12 @@ module.exports.registerCaptain = async (req, res, next) => {
     res.status(201).json({ token, captain });
 }
 
-
+/**
+ * Login captain
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
 module.exports.loginCaptain = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -55,7 +64,7 @@ module.exports.loginCaptain = async (req, res, next) => {
 
     const isMatch = await captain.comparePassword(password);
 
-    if (isMatch) {
+    if (!isMatch) {
         return res.status(401).json({ message: 'Invalid email or password' });
     }
 
@@ -66,10 +75,22 @@ module.exports.loginCaptain = async (req, res, next) => {
     res.status(200).json({ token, captain });
 }
 
+/**
+ * Get captain profile
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
 module.exports.getCaptainProfile = async (req, res, next) => {
     res.status(200).json({ captain: req.captain });
 }
 
+/**
+ * Logout captain
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
 module.exports.logoutCaptain = async (req, res, next) => {
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 

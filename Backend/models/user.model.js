@@ -28,17 +28,32 @@ const userSchema = new mongoose.Schema({
     socketId: {
         type: String,
     }
-})
+});
 
+/**
+ * Generate JWT authentication token
+ * @returns {string} JWT token
+ */
 userSchema.methods.generateAuthToken = function () {
     const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
     return token;
 }
 
+/**
+ * Compare provided password with hashed password in database
+ * @param {string} password - Password to compare
+ * @returns {Promise<boolean>} True if password matches
+ */
 userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
+/**
+ * Hash password using bcrypt
+ * @static
+ * @param {string} password - Password to hash
+ * @returns {Promise<string>} Hashed password
+ */
 userSchema.statics.hashPassword = async function (password) {
     return await bcrypt.hash(password, 10);
 }

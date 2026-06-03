@@ -1,17 +1,28 @@
-import React from 'react'
-import { Link } from "react-router-dom";
+import React, { useContext } from 'react'
+import { UserDataContext } from '../context/UserContext'
 
 const Home = () => {
-    return (
-        <div className='bg-cover bg-center bg-[url(https://images.unsplash.com/photo-1557404763-69708cd8b9ce?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] h-screen  pt-8  flex justify-between flex-col w-full '>
-            <img className='w-16  ml-8' src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Uber_logo_2018.svg/960px-Uber_logo_2018.svg.png" alt="/" />
+    const { user } = useContext(UserDataContext);
 
-            <div className='bg-white pb-7 py-4 px-4 '>
-                <h2 className='text-[30px] font-bold  '>Get Started with Uber</h2>
-                <Link to="/login" className=' flex items-center justify-center w-full bg-black  text-white py-3 rounded-lg mt-5'>Continue</Link>
+    return (
+        <div className="p-7">
+            <h1 className="text-4xl font-bold mb-5">Welcome to Uber</h1>
+            <div className="bg-white p-5 rounded-lg shadow">
+                <h2 className="text-2xl font-semibold mb-3">Your Profile</h2>
+                {user && (
+                    <div>
+                        <p className="text-lg">
+                            <span className="font-semibold">Name:</span> {user.fullname?.firstname} {user.fullname?.lastname}
+                        </p>
+                        <p className="text-lg">
+                            <span className="font-semibold">Email:</span> {user.email}
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     )
 }
 
 export default Home
+

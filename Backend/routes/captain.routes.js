@@ -1,11 +1,12 @@
 const captainController = require('../controllers/captain.controller');
 const express = require('express');
 const router = express.Router();
-const { body } = require("express-validator")
-const { authCaptain } = require('../middlewares/auth.middleware');
+const { body } = require("express-validator");
 const authMiddleware = require('../middlewares/auth.middleware');
 
-
+/**
+ * POST /register - Register a new captain
+ */
 router.post('/register', [
     body('email').isEmail().withMessage('Invalid Email'),
     body('fullname.firstname').isLength({ min: 3 }).withMessage('First name must be at least 3 characters long'),
@@ -16,17 +17,26 @@ router.post('/register', [
     body('vehicle.vehicleType').isIn(['car', 'motorcycle', 'auto']).withMessage('Invalid vehicle type'),
 ],
     captainController.registerCaptain
-)
+);
 
+/**
+ * POST /login - Login captain
+ */
 router.post('/login', [
     body('email').isEmail().withMessage('Invalid Email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least  6 character long')
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ],
     captainController.loginCaptain
-)
+);
 
-router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile)
+/**
+ * GET /profile - Get captain profile (authenticated)
+ */
+router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile);
 
-router.get('/logout', authMiddleware.authCaptain, captainController.logoutCaptain)
+/**
+ * GET /logout - Logout captain (authenticated)
+ */
+router.get('/logout', authMiddleware.authCaptain, captainController.logoutCaptain);
 
 module.exports = router;
