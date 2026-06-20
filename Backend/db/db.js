@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 /**
  * Connect to MongoDB database
- * Uses environment variable DB_CONNECT for connection string
+ * Uses environment variable MONGO_URI for connection string
  */
 function connectToDb() {
-    mongoose.connect(process.env.DB_CONNECT)
+    mongoose.connect(process.env.MONGO_URI)
         .then(() => {
             console.log('Connected to MongoDB');
         })

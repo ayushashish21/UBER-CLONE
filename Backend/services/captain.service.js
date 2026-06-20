@@ -42,4 +42,6 @@ module.exports.createCaptain = async ({
       vehicleType
     }
   });
+
+  return captain;
 }

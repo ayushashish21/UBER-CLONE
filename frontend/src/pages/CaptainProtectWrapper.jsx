@@ -1,43 +1,41 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { UserDataContext } from '../context/UserContext'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
+import { useCaptainContext } from '../context/CaptainContext.jsx'
+import { useNavigate } from 'react-router-dom'
 
 /**
- * Protected wrapper component for user-only routes
- * Redirects to login if user is not authenticated
+ * Protected wrapper component for captain-only routes
+ * Redirects to login if captain is not authenticated
  */
-const UserProtectWrapper = ({ children }) => {
+const CaptainProtectWrapper = ({ children }) => {
     const token = localStorage.getItem('token')
     const navigate = useNavigate()
-    const { setUser } = useContext(UserDataContext)
+    const { setCaptain } = useCaptainContext()
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (!token) {
-            navigate('/login')
+            navigate('/captain-login')
             return
         }
 
-        axios.get(`${import.meta.env.VITE_BASE_URL}/users/profile`, {
+        axios.get(`${import.meta.env.VITE_BASE_URL}/captains/profile`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
         .then((response) => {
             if (response.status === 200) {
-                setUser(response.data.user)
+                setCaptain(response.data.captain)
+                setIsLoading(false)
             }
         })
         .catch((error) => {
             console.log(error)
             localStorage.removeItem('token')
-            navigate('/login')
+            navigate('/captain-login')
         })
-        .finally(() => {
-            setIsLoading(false)
-        })
-    }, [token, navigate, setUser])
+    }, [token, navigate, setCaptain])
 
     if (isLoading) {
         return <div>Loading...</div>
@@ -50,4 +48,4 @@ const UserProtectWrapper = ({ children }) => {
     )
 }
 
-export default UserProtectWrapper
+export default CaptainProtectWrapper

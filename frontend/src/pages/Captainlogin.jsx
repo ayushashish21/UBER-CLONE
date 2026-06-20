@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
+import { useCaptainContext } from '../context/CaptainContext.jsx';
 
 const Captainlogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const { captain, setCaptain } = useCaptainContext();
 
     const navigate = useNavigate();
 
@@ -22,10 +25,12 @@ const Captainlogin = () => {
             if (response.status === 200) {
                 const data = response.data;
                 localStorage.setItem('token', data.token);
-                navigate('/home');
+                setCaptain(data.captain);
+                navigate('/captain-home');
             }
         } catch (error) {
             console.error('Login error:', error);
+            alert('Login failed. Please check your credentials and try again.');
         }
 
         setEmail('');

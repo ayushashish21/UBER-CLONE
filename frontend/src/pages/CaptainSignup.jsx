@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useCaptainContext } from '../context/CaptainContext.jsx';
 
 const CaptainSignup = () => {
     const [email, setEmail] = useState('');
@@ -11,6 +12,8 @@ const CaptainSignup = () => {
     const [vehiclePlate, setVehiclePlate] = useState('');
     const [vehicleCapacity, setVehicleCapacity] = useState('');
     const [vehicleType, setVehicleType] = useState('');
+
+    const { captain, setCaptain } = useCaptainContext();
 
     const navigate = useNavigate();
 
@@ -38,10 +41,11 @@ const CaptainSignup = () => {
             if (response.status === 201) {
                 const data = response.data;
                 localStorage.setItem('token', data.token);
-                navigate('/home');
+                navigate('/captain-home');
             }
         } catch (error) {
             console.error('Signup error:', error);
+            alert('Signup failed. Please check your details and try again.');
         }
 
         setEmail('');
@@ -58,13 +62,13 @@ const CaptainSignup = () => {
         <div className="px-5 py-5 h-screen flex flex-col justify-between overflow-y-auto">
             <div>
                 <img
-                    className="w-16 mb-10"
+                    className="w-16 mb-4"
                     src="https://www.svgrepo.com/show/505031/uber-driver.svg"
                     alt="Uber Captain"
                 />
 
                 <form onSubmit={submitHandler}>
-                    <h3 className="text-lg font-medium mb-2">What's your name</h3>
+                    <h3 className="text-lg font-medium mb-2">What's our Captain's name</h3>
                     <div className="flex gap-4 mb-6">
                         <input
                             className="bg-[#eeeeee] w-1/2 rounded px-4 py-2 border text-lg placeholder:text-base"
@@ -84,7 +88,7 @@ const CaptainSignup = () => {
                         />
                     </div>
 
-                    <h3 className="text-lg font-medium mb-2">What's your email</h3>
+                    <h3 className="text-lg font-medium mb-2">What's our Captain's email</h3>
                     <input
                         className="bg-[#eeeeee] mb-6 rounded px-4 py-2 border w-full text-lg placeholder:text-base"
                         required
@@ -106,47 +110,49 @@ const CaptainSignup = () => {
 
                     <h3 className="text-lg font-medium mb-2">Vehicle Information</h3>
 
-                    <input
-                        className="bg-[#eeeeee] mb-6 rounded px-4 py-2 border w-full text-lg placeholder:text-base"
-                        required
-                        type="text"
-                        placeholder="Vehicle Color"
-                        value={vehicleColor}
-                        onChange={(e) => setVehicleColor(e.target.value)}
-                    />
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <input
+                            className="bg-[#eeeeee] rounded px-4 py-2 border w-full text-lg placeholder:text-base"
+                            required
+                            type="text"
+                            placeholder="Vehicle Color"
+                            value={vehicleColor}
+                            onChange={(e) => setVehicleColor(e.target.value)}
+                        />
 
-                    <input
-                        className="bg-[#eeeeee] mb-6 rounded px-4 py-2 border w-full text-lg placeholder:text-base"
-                        required
-                        type="text"
-                        placeholder="Vehicle Plate"
-                        value={vehiclePlate}
-                        onChange={(e) => setVehiclePlate(e.target.value)}
-                    />
+                        <input
+                            className="bg-[#eeeeee] rounded px-4 py-2 border w-full text-lg placeholder:text-base"
+                            required
+                            type="text"
+                            placeholder="Vehicle Plate"
+                            value={vehiclePlate}
+                            onChange={(e) => setVehiclePlate(e.target.value)}
+                        />
 
-                    <input
-                        className="bg-[#eeeeee] mb-6 rounded px-4 py-2 border w-full text-lg placeholder:text-base"
-                        required
-                        type="number"
-                        placeholder="Vehicle Capacity"
-                        value={vehicleCapacity}
-                        onChange={(e) => setVehicleCapacity(e.target.value)}
-                    />
+                        <input
+                            className="bg-[#eeeeee] rounded px-4 py-2 border w-full text-lg placeholder:text-base"
+                            required
+                            type="number"
+                            placeholder="Vehicle Capacity"
+                            value={vehicleCapacity}
+                            onChange={(e) => setVehicleCapacity(e.target.value)}
+                        />
 
-                    <select
-                        className="bg-[#eeeeee] mb-6 rounded px-4 py-2 border w-full text-lg placeholder:text-base"
-                        required
-                        value={vehicleType}
-                        onChange={(e) => setVehicleType(e.target.value)}
-                    >
-                        <option value="">Select Vehicle Type</option>
-                        <option value="car">Car</option>
-                        <option value="motorcycle">Motorcycle</option>
-                        <option value="auto">Auto</option>
-                    </select>
+                        <select
+                            className="bg-[#eeeeee] rounded px-4 py-2 border w-full text-lg placeholder:text-base"
+                            required
+                            value={vehicleType}
+                            onChange={(e) => setVehicleType(e.target.value)}
+                        >
+                            <option value="">Select Vehicle Type</option>
+                            <option value="car">Car</option>
+                            <option value="motorcycle">Motorcycle</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
 
                     <button className="bg-[#111] text-white font-semibold mb-3 rounded px-4 py-2 w-full text-base">
-                        Sign Up
+                        Create Captain Account
                     </button>
 
                     <p className="text-center">
