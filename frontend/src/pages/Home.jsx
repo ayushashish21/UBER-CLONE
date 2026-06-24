@@ -1,15 +1,21 @@
-import React from "react";
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import LocationSearchPanel from "../components/LocationSearchPanel";
-import 'remixicon/fonts/remixicon.css'; // Added Remix Icon css import
+import VehiclePanel from "../components/VehiclePanel";
+import ConfirmRide from "../components/ConfirmRide";
+import LookingForDriver from "../components/LookingForDriver";
+import WaitingForDriver from "../components/WaitingForDriver";
+import 'remixicon/fonts/remixicon.css';
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [activeField, setActiveField] = useState(null);
+  const [lookingForDriver, setLookingForDriver] = useState(false);
+  const [waitingForDriver, setWaitingForDriver] = useState(false);
   
   const panelRef = useRef(null);
   const mainCardRef = useRef(null);
@@ -48,8 +54,8 @@ const Home = () => {
     e.preventDefault();
   };
 
-  React.useEffect(() => {
-    if (pickup && destination && !panelOpen) {
+  useEffect(() => {
+    if (pickup && destination && !panelOpen && !lookingForDriver && !waitingForDriver) {
       setPanelOpen(true);
     }
   }, [pickup, destination]);
@@ -57,9 +63,10 @@ const Home = () => {
   useGSAP(
     () => {
       gsap.to(panelRef.current, {
-        height: panelOpen ? "calc(100vh - 260px)" : "0px",
-        duration: 0.5,
-        ease: "power3.out",
+        height: panelOpen ? "100%" : "0px",
+        paddingBottom: panelOpen ? "24px" : "0px",
+        duration: 0.75, 
+        ease: "power3.inOut", 
       });
     },
     [panelOpen]
@@ -70,19 +77,33 @@ const Home = () => {
     setPickup("");
     setDestination("");
     setPanelOpen(false);
+    setActiveField(null);
+    setLookingForDriver(false);
+    setWaitingForDriver(false);
+  };
+
+  // Cancels active match and safely routes user back to the vehicle panel selection
+  const handleCancelRide = () => {
+    setWaitingForDriver(false);
+    setLookingForDriver(false);
+    setSelectedRide(null);
+    setPanelOpen(true);
   };
 
   return (
     <div className="relative h-screen bg-slate-950 text-slate-950 overflow-hidden">
       {/* Uber Logo */}
       <img
-        className="w-16 absolute left-5 top-5 z-10"
+        className="w-16 absolute left-5 top-5 z-10 pointer-events-none"
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Uber_logo_2018.svg/960px-Uber_logo_2018.svg.png"
         alt="Uber Logo"
       />
 
       {/* Map Background */}
-      <div className="h-full w-full absolute inset-0 z-0">
+      <div 
+        onClick={() => setPanelOpen(false)}
+        className="h-full w-full absolute inset-0 z-0 cursor-pointer"
+      >
         <img
           className="w-full h-full object-cover"
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrTkHb14vVfomlEOWqrpKvN6xHaP6rHYlw0HnrqcTEEw&s=10"
@@ -91,20 +112,21 @@ const Home = () => {
       </div>
 
       {/* Bottom Interface Layer */}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end z-20 pointer-events-none">
+      <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end z-20 pointer-events-none transition-all duration-700 ease-in-out ${panelOpen ? "h-screen" : "h-auto"}`}>
         
-        {/* Main Search Inputs Card */}
-        <div
-          ref={mainCardRef}
-          className="find-trip-card w-full bg-white/95 p-5 pt-8 shadow-2xl backdrop-blur-xl pointer-events-auto"
-        >
+        {/* Main Card Container */}
+        <div ref={mainCardRef} className="find-trip-card w-full bg-white p-5 pt-5 pointer-events-auto flex-shrink-0">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h4 className="text-2xl font-semibold text-slate-900 tracking-wide">
-                {selectedRide ? "Confirm Booking" : "Find a trip"}
+              <h4 className="text-2xl font-bold text-slate-900 tracking-wide">
+                {waitingForDriver ? "Meet Your Driver" : lookingForDriver ? "Looking for a ride" : selectedRide ? "Confirm Ride" : "Find a trip"}
               </h4>
               <p className="mt-1 text-sm text-slate-500">
-                {selectedRide
+                {waitingForDriver
+                  ? "Driver is arriving at your location"
+                  : lookingForDriver 
+                  ? "Connecting with nearby drivers..."
+                  : selectedRide
                   ? `${selectedRide.name === "Motorbike" ? "Motor Bike" : selectedRide.name} - ${selectedRide.price}`
                   : pickup && destination
                   ? "✓ Ready to choose a ride."
@@ -112,33 +134,37 @@ const Home = () => {
               </p>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               {(pickup || destination) && (
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="inline-flex h-10 px-3 items-center justify-center rounded-full bg-red-50 text-xs font-medium text-red-600 hover:bg-red-100 active:scale-95 transition"
+                  className="inline-flex h-10 px-4 items-center justify-center rounded-full bg-red-50 text-xs font-semibold text-red-600 cursor-pointer hover:bg-red-100 active:scale-95 transition duration-200"
                 >
                   Clear
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setPanelOpen((open) => !open)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 hover:bg-slate-200 active:scale-95 transition"
-                aria-label={panelOpen ? "Close panel" : "Open panel"}
-              >
-                <i className={`ri-arrow-${panelOpen ? "down" : "up"}-s-line`} />
-              </button>
+              
+              {!selectedRide && !lookingForDriver && !waitingForDriver && (
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen((open) => !open)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 hover:bg-slate-200 active:scale-95 transition"
+                  aria-label={panelOpen ? "Close panel" : "Open panel"}
+                >
+                  <i className={`ri-arrow-${panelOpen ? "down" : "up"}-s-line`} />
+                </button>
+              )}
             </div>
           </div>
 
-          {!selectedRide && (
-            <form onSubmit={submitHandler} className="mt-6 space-y-3">
+          {/* Core App View Conditional Architecture */}
+          {!selectedRide ? (
+            <form onSubmit={submitHandler} className="mt-4 space-y-3">
               <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm hover:border-slate-400 hover:bg-slate-100/50 focus-within:ring-2 focus-within:ring-black focus-within:border-black transition-all duration-200 cursor-text">
                 <i className="ri-map-pin-fill absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-400" />
                 <input
-                  onClick={() => setPanelOpen(true)}
+                  onClick={() => { setPanelOpen(true); setActiveField("pickup"); }}
                   value={pickup}
                   onChange={(e) => setPickup(e.target.value)}
                   className="w-full bg-transparent pl-11 text-base text-slate-900 outline-none placeholder-slate-400"
@@ -150,7 +176,7 @@ const Home = () => {
               <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm hover:border-slate-400 hover:bg-slate-100/50 focus-within:ring-2 focus-within:ring-black focus-within:border-black transition-all duration-200 cursor-text">
                 <i className="ri-map-pin-fill absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-400" />
                 <input
-                  onClick={() => setPanelOpen(true)}
+                  onClick={() => { setPanelOpen(true); setActiveField("destination"); }}
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   className="w-full bg-transparent pl-11 text-base text-slate-900 outline-none placeholder-slate-400"
@@ -159,86 +185,51 @@ const Home = () => {
                 />
               </div>
             </form>
-          )}
-
-          {selectedRide && (
-            <div className="mt-6 space-y-3">
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="mb-2 text-sm font-semibold text-slate-600 text-center">Selected Ride</p>
-                <div className="flex flex-col items-center justify-center gap-2 rounded-xl bg-white p-4 shadow-sm text-center">
-                  <img src={selectedRide.image} alt={selectedRide.name} className="h-10 w-16 object-contain mx-auto" />
-                  <div>
-                    <p className="font-semibold text-slate-900 tracking-wide">
-                      {selectedRide.name === "Motorbike" ? "Motor Bike" : selectedRide.name}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5">{selectedRide.time}</p>
-                  </div>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{selectedRide.price}</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => { setSelectedRide(null); setPanelOpen(true); }}
-                  className="flex-1 rounded-3xl bg-slate-200 px-4 py-3 text-center font-semibold text-slate-900 hover:bg-slate-300 active:scale-95 transition-all"
-                >
-                  Change Ride
-                </button>
-                <button className="flex-1 rounded-3xl bg-black px-4 py-3 text-center font-semibold text-white hover:bg-slate-800 active:scale-95 transition-all">
-                  Confirm
-                </button>
-              </div>
-            </div>
+          ) : waitingForDriver ? (
+            <WaitingForDriver 
+              selectedRide={selectedRide}
+              pickup={pickup}
+              destination={destination}
+              onCancel={handleCancelRide} // Passed Prop Here
+            />
+          ) : lookingForDriver ? (
+            <LookingForDriver 
+              selectedRide={selectedRide}
+              pickup={pickup}
+              destination={destination}
+              setLookingForDriver={setLookingForDriver}
+              setWaitingForDriver={setWaitingForDriver}
+            />
+          ) : (
+            <ConfirmRide 
+              selectedRide={selectedRide} 
+              setSelectedRide={setSelectedRide} 
+              setPanelOpen={setPanelOpen} 
+              pickup={pickup}
+              destination={destination}
+              onConfirm={() => setLookingForDriver(true)}
+            />
           )}
         </div>
 
-        {/* Dynamic Slide-up Selection Drawer Sheet Popup */}
-        <div
-          ref={panelRef}
-          className="w-full overflow-hidden bg-white shadow-2xl flex flex-col pointer-events-auto h-0"
-        >
-          <div className="border-b border-slate-100 px-5 py-4 flex-shrink-0 text-center">
-            <div className="mx-auto h-1 w-12 rounded-full bg-slate-300" />
-            <h5 className="mt-3 text-lg font-semibold text-slate-900 tracking-wide">
-              {pickup && destination ? "Choose a Ride" : "Recent places"}
-            </h5>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+        {/* Dynamic Slide-up Sheet Panel Wrapper */}
+        <div ref={panelRef} className="w-full overflow-hidden bg-white flex flex-col pointer-events-auto h-0">
+          <div className="flex-1 overflow-y-auto px-5 py-1">
             {pickup && destination ? (
-              <div className="space-y-3 pb-4">
-                {rides.map((ride) => (
-                  <button
-                    key={ride.id}
-                    onClick={() => {
-                      setTimeout(() => {
-                        setSelectedRide(ride);
-                        setPanelOpen(false);
-                      }, 200);
-                    }}
-                    className="flex flex-col w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none transition-all duration-200 hover:border-slate-400 hover:bg-slate-100/50 focus:ring-2 focus:ring-black focus:border-black active:bg-slate-200 active:scale-[0.99] text-center"
-                  >
-                    <img 
-                      src={ride.image} 
-                      alt={ride.name} 
-                      className="h-10 w-16 object-contain mx-auto" 
-                    />
-                    <div>
-                      {/* UPDATED: Replaced original (X seats) structure with inline Remix Icon wrapper */}
-                      <p className="inline-flex items-center justify-center gap-1 font-semibold text-slate-900 tracking-wide">
-                        {ride.name === "Motorbike" ? "Motor Bike" : ride.name}
-                        <span className="inline-flex items-center gap-0.5 text-xs font-normal text-slate-400 ml-1">
-                          <i className="ri-user-fill text-[11px]" /> {ride.seats}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">{ride.time} • {ride.description}</p>
-                    </div>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{ride.price}</p>
-                  </button>
-                ))}
-              </div>
+              <VehiclePanel 
+                rides={rides}
+                pickup={pickup}
+                destination={destination}
+                setSelectedRide={setSelectedRide}
+                setPanelOpen={setPanelOpen}
+              />
             ) : (
-              <div className="hover-fields-container [&_div]:transition-all [&_div]:duration-200 [&_div:hover]:bg-slate-100/50 [&_div:hover]:border-slate-400 [&_div:active]:scale-[0.99] cursor-pointer">
-                <LocationSearchPanel />
+              <div className="w-full">
+                <LocationSearchPanel 
+                  setPickup={setPickup} 
+                  setDestination={setDestination} 
+                  currentField={activeField} 
+                />
               </div>
             )}
           </div>
