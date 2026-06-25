@@ -21,11 +21,7 @@ const VehiclePanel = ({ rides, pickup, destination, setSelectedRide, setPanelOpe
             }}
             className="flex flex-col w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none transition-all duration-200 hover:border-slate-400 hover:bg-slate-100/50 focus:ring-2 focus:ring-black focus:border-black active:bg-slate-200 active:scale-[0.99] text-center"
           >
-            <img 
-              src={ride.image} 
-              alt={ride.name} 
-              className="h-10 w-16 object-contain mx-auto" 
-            />
+            <img src={ride.image} alt={ride.name} className="h-10 w-16 object-contain mx-auto" />
             <div>
               <p className="inline-flex items-center justify-center gap-1 font-semibold text-slate-900 tracking-wide">
                 {ride.name === "Motorbike" ? "Motor Bike" : ride.name}

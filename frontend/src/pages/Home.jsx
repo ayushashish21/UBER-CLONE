@@ -60,13 +60,14 @@ const Home = () => {
     }
   }, [pickup, destination]);
 
+  // GSAP clean viewport sliding layout control
   useGSAP(
     () => {
       gsap.to(panelRef.current, {
         height: panelOpen ? "100%" : "0px",
         paddingBottom: panelOpen ? "24px" : "0px",
-        duration: 0.75, 
-        ease: "power3.inOut", 
+        duration: 0.5, 
+        ease: "power3.out", 
       });
     },
     [panelOpen]
@@ -82,7 +83,6 @@ const Home = () => {
     setWaitingForDriver(false);
   };
 
-  // Cancels active match and safely routes user back to the vehicle panel selection
   const handleCancelRide = () => {
     setWaitingForDriver(false);
     setLookingForDriver(false);
@@ -112,7 +112,7 @@ const Home = () => {
       </div>
 
       {/* Bottom Interface Layer */}
-      <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end z-20 pointer-events-none transition-all duration-700 ease-in-out ${panelOpen ? "h-screen" : "h-auto"}`}>
+      <div className={`absolute inset-x-0 bottom-0 flex flex-col justify-end z-20 pointer-events-none ${panelOpen ? "h-screen" : "h-auto"}`}>
         
         {/* Main Card Container */}
         <div ref={mainCardRef} className="find-trip-card w-full bg-white p-5 pt-5 pointer-events-auto flex-shrink-0">
@@ -158,7 +158,6 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Core App View Conditional Architecture */}
           {!selectedRide ? (
             <form onSubmit={submitHandler} className="mt-4 space-y-3">
               <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm hover:border-slate-400 hover:bg-slate-100/50 focus-within:ring-2 focus-within:ring-black focus-within:border-black transition-all duration-200 cursor-text">
@@ -190,7 +189,7 @@ const Home = () => {
               selectedRide={selectedRide}
               pickup={pickup}
               destination={destination}
-              onCancel={handleCancelRide} // Passed Prop Here
+              onCancel={handleCancelRide}
             />
           ) : lookingForDriver ? (
             <LookingForDriver 

@@ -1,19 +1,31 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import 'remixicon/fonts/remixicon.css';
 
 const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    gsap.fromTo(containerRef.current, 
+      { opacity: 0, y: 20 }, 
+      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
+    );
+  }, []);
+
   if (!selectedRide) return null;
 
   return (
-    <div className="mt-6 space-y-4 animate-[fadeIn_0.3s_ease-out]">
+    <div ref={containerRef} className="mt-6 space-y-4">
       {/* Top Driver Info Card */}
       <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4 text-white shadow-md">
-        {/* Increased gap from gap-3 to gap-5 to create more space between avatar and text */}
         <div className="flex items-center gap-5">
           <div className="relative">
-            {/* Driver Profile placeholder icon */}
-            <div className="h-12 w-12 rounded-full border-2 border-white/20 bg-slate-800 flex items-center justify-center text-xl text-slate-300">
-              <i className="ri-user-line" />
-            </div>
+            {/* Synced Driver Profile Image */}
+            <img 
+              className="h-12 w-12 rounded-full border-2 border-white/20 object-cover"
+              src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop" 
+              alt="Driver Arjun Sharma" 
+            />
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
           </div>
           <div className="text-left">
@@ -31,19 +43,15 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
           {/* Vehicle Info */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-3">
-              
-              {/* Blue Shadow Ripple effect underneath vehicle */}
               <div className="relative flex items-center justify-center h-12 w-16">
                 <span className="absolute animate-ping inline-flex h-8 w-12 rounded-full bg-sky-400 opacity-40"></span>
                 <span className="absolute animate-pulse inline-flex h-12 w-16 rounded-full bg-blue-500 opacity-25 blur-md"></span>
-                
                 <img 
                   src={selectedRide.image} 
                   alt={selectedRide.name} 
                   className="relative z-10 h-full w-full object-contain" 
                 />
               </div>
-
               <div className="text-left">
                 <p className="font-semibold text-slate-900 tracking-wide">
                   {selectedRide.name === "Motorbike" ? "Motor Bike" : selectedRide.name}
@@ -56,9 +64,8 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
             <p className="text-xl font-bold text-slate-900">{selectedRide.price}</p>
           </div>
 
-          {/* Route Details with vertical connecting line */}
+          {/* Route Details */}
           <div className="space-y-4 text-left relative pl-6 before:absolute before:left-[11px] before:top-2.5 before:bottom-2.5 before:w-0.5 before:bg-slate-200">
-            {/* Pickup Location Display */}
             <div className="relative">
               <i className="ri-record-circle-fill absolute -left-6 top-0.5 text-xs text-slate-900 bg-white z-10" />
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pickup Address</p>
@@ -66,8 +73,6 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
                 {pickup || "Not selected"}
               </p>
             </div>
-
-            {/* Destination Location Display */}
             <div className="relative">
               <i className="ri-map-pin-fill absolute -left-[26px] top-0.5 text-base text-red-500 bg-white z-10" />
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Destination</p>
