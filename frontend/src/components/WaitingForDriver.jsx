@@ -56,7 +56,7 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
                 <p className="font-semibold text-slate-900 tracking-wide">
                   {selectedRide.name === "Motorbike" ? "Motor Bike" : selectedRide.name}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5 font-medium text-emerald-600 animate-pulse">
+                <p className="text-xs mt-0.5 font-medium text-emerald-600 animate-pulse">
                   Driver arriving in 3 mins
                 </p>
               </div>
