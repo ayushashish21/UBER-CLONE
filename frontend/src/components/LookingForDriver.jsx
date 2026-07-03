@@ -1,14 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 
-const LookingForDriver = ({ selectedRide, pickup, destination, onDriverFound }) => {
-  useEffect(() => {
-    // Mocking socket/search wait time
-    const timer = setTimeout(() => {
-      if(onDriverFound) onDriverFound();
-    }, 3500);
-    return () => clearTimeout(timer);
-  }, [onDriverFound]);
-
+const LookingForDriver = ({ selectedRide, pickup, destination }) => {
   if (!selectedRide) return null;
 
   return (

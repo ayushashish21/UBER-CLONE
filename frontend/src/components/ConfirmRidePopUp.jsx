@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import 'remixicon/fonts/remixicon.css';
 
-const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRidePopupOpen }) => {
+const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRidePopupOpen, ride }) => {
   const fullScreenRef = useRef(null);
   
   const [otp, setOtp] = useState("");
@@ -34,9 +34,8 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
   };
 
   const handleConfirmVerification = () => {
-    const correctOtp = "123456";
-
-    if (otp === correctOtp) {
+    // Reads directly from the returned ride data token
+    if (otp === ride?.otp) {
       setErrorMessage("");
       window.location.href = "/captain-riding";
     } else {
@@ -49,7 +48,6 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
       ref={fullScreenRef}
       className="absolute inset-0 h-screen w-full bg-white z-50 flex flex-col justify-between p-5 overflow-hidden translate-y-full"
     >
-      {/* Top Header Navigation Row */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-shrink-0">
         <button 
           onClick={handleCancel}
@@ -62,10 +60,8 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
         <div className="w-10 h-10" /> 
       </div>
 
-      {/* FIXED: Removed overflow-y-auto and reduced vertical spacing to prevent internal scrolling */}
       <div className="flex-1 flex flex-col justify-center space-y-4 py-2">
         
-        {/* Passenger Profile Card */}
         <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 px-4 rounded-2xl w-full">
           <div className="flex items-center gap-3">
             <img 
@@ -74,7 +70,9 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
               className="h-12 w-14 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
             />
             <div className="text-left flex flex-col justify-center">
-              <h5 className="font-extrabold text-sm text-slate-900 leading-tight">Rayan Daniels</h5>
+              <h5 className="font-extrabold text-sm text-slate-900 leading-tight capitalize">
+                {ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}
+              </h5>
               <div className="text-[11px] font-semibold text-slate-500 mt-0.5 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="flex items-center gap-1"><i className="ri-user-3-line text-slate-400" /> Passenger</span>
                 <span className="text-slate-300">•</span>
@@ -82,16 +80,9 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
               </div>
             </div>
           </div>
-          <div className="flex-shrink-0 ml-2">
-            <span className="text-[11px] font-bold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full border border-blue-200 inline-block whitespace-nowrap">
-              2.5 km away
-            </span>
-          </div>
         </div>
 
-        {/* Route Location Card Area */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4 shadow-sm text-left">
-          {/* Pickup Address block */}
           <div className="flex gap-4 items-start relative">
             <div className="flex flex-col items-center flex-shrink-0 mt-1">
               <i className="ri-checkbox-blank-circle-fill text-[10px] text-blue-600 bg-slate-50 z-10" />
@@ -99,27 +90,24 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
             </div>
             <div className="space-y-0.5">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pickup Location</p>
-              <p className="text-xs font-semibold text-slate-800 leading-snug">
-                Lalpur, Ranchi (Near Nucleus Mall)
+              <p className="text-xs font-semibold text-slate-800 leading-snug break-words">
+                {ride?.pickup}
               </p>
             </div>
           </div>
-
-          {/* Destination Address block */}
           <div className="flex gap-4 items-start pt-1">
             <div className="flex flex-col items-center flex-shrink-0 mt-0.5 z-10">
               <i className="ri-flag-2-fill text-sm text-red-500 bg-slate-50" />
             </div>
             <div className="space-y-0.5">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Destination Location</p>
-              <p className="text-xs font-semibold text-slate-800 leading-snug">
-                25B, Etwari Bazar, CKP, Jharkhand
+              <p className="text-xs font-semibold text-slate-800 leading-snug break-words">
+                {ride?.destination}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Fare collection panel box */}
         <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-3.5 rounded-2xl">
           <div className="flex items-center gap-3 text-left">
             <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center text-white text-lg flex-shrink-0">
@@ -130,12 +118,10 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
               <p className="text-[10px] text-emerald-600/80 font-semibold mt-0.5">Collect cash or online payment</p>
             </div>
           </div>
-          <h3 className="text-xl font-black text-emerald-700 ml-2 flex-shrink-0">₹199</h3>
+          <h3 className="text-xl font-black text-emerald-700 ml-2 flex-shrink-0">₹{ride?.fare}</h3>
         </div>
-
       </div>
 
-      {/* Footer Interface Layer (OTP Entry + Actions) */}
       <div className="space-y-3 pt-3 border-t border-slate-100 flex-shrink-0 bg-white">
         
         {errorMessage && (
@@ -145,7 +131,6 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
           </div>
         )}
 
-        {/* OTP Input Placeholder Field */}
         <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-black focus-within:border-black transition-all duration-200 text-left">
           <i className="ri-lock-password-fill absolute left-4 top-1/2 -translate-y-1/2 text-base text-slate-400" />
           <input
@@ -159,7 +144,6 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
           />
         </div>
 
-        {/* Action Controls Split Row */}
         <div className="flex gap-3">
           <button 
             onClick={handleCancel}
@@ -175,7 +159,6 @@ const ConfirmRidePopup = ({ confirmRidePopupOpen, setConfirmRidePopupOpen, setRi
           </button>
         </div>
       </div>
-
     </div>
   );
 };

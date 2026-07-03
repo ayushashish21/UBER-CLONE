@@ -1,104 +1,93 @@
-import React, { useEffect, useRef } from "react";
-import gsap from "gsap";
+import React, { useRef } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 import 'remixicon/fonts/remixicon.css';
 
-const RidePopup = ({ ridePopupOpen, setRidePopupOpen, setConfirmRidePopupOpen }) => {
+const RidePopup = ({ ride, ridePopupOpen, setRidePopupOpen, setConfirmRidePopupOpen }) => {
   const popupRef = useRef(null);
 
-  useEffect(() => {
+  // THIS IS THE MAGIC FIX: 
+  // It watches 'ridePopupOpen'. When the socket turns it true, it slides up automatically!
+  useGSAP(() => {
     if (ridePopupOpen) {
-      gsap.to(popupRef.current, {
-        y: 0,
-        duration: 0.5,
-        ease: "power3.out"
+      gsap.to(popupRef.current, { 
+        transform: 'translateY(0)', 
+        duration: 0.4, 
+        ease: "power3.out" 
       });
     } else {
-      gsap.to(popupRef.current, {
-        y: "100%",
-        duration: 0.4,
-        ease: "power3.in"
+      gsap.to(popupRef.current, { 
+        transform: 'translateY(100%)', 
+        duration: 0.4, 
+        ease: "power3.in" 
       });
     }
   }, [ridePopupOpen]);
 
-  const handleAccept = () => {
-    setRidePopupOpen(false);
-    setConfirmRidePopupOpen(true);
-  };
-
   return (
     <div 
-      ref={popupRef}
-      className="absolute inset-x-0 bottom-0 bg-white p-6 z-30 shadow-[0_-15px_40px_rgba(0,0,0,0.18)] rounded-t-3xl border-t border-slate-200 translate-y-full"
+      ref={popupRef} 
+      // Ensure the initial state is pushed off the bottom of the screen (translate-y-full)
+      className="fixed w-full z-50 bottom-0 translate-y-full bg-white px-5 py-6 pt-12 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
     >
-      {/* Decorative drag handle */}
-      <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-4" />
+      {/* Top Drag Handle (Optional visual flair) */}
+      <div className="w-12 h-1.5 bg-slate-200 rounded-full absolute top-4 left-1/2 -translate-x-1/2"></div>
 
-      <div className="flex flex-col gap-4 text-center">
-        <div>
-          <h4 className="text-xl font-extrabold text-slate-950 tracking-wide">New Ride Available!</h4>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">Accept to inspect complete customer route matrix</p>
-        </div>
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-2xl font-bold text-slate-900">New Ride Request</h3>
+        <h5 className="text-lg font-black text-slate-900">
+          ₹{ride?.fare || "0"}
+        </h5>
+      </div>
 
-        <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-left space-y-4">
-          
-          {/* Rider Profile Identification Row */}
-          <div className="flex items-center justify-between w-full bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3">
-              <img 
-                src="https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop" 
-                alt="Rider Profile" 
-                className="h-11 w-11 rounded-full object-cover border border-slate-200"
-              />
-              <div>
-                <h5 className="font-bold text-sm text-slate-900 leading-none">Rayan Daniels</h5>
-                <p className="text-xs font-semibold text-slate-400 mt-1">Passenger</p>
-              </div>
-            </div>
-            
-            {/* Proximity Distance Badge */}
-            <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold border border-blue-100">
-              <i className="ri-map-pin-user-fill text-sm" />
-              <span>2.5 km away</span>
-            </div>
+      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between gap-4 mb-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-slate-900 flex items-center justify-center text-white text-xl font-bold uppercase shadow-sm">
+            {ride?.user?.fullname?.firstname?.[0] || 'U'}
           </div>
-
-          {/* Product Category Info Header Line */}
-          <div className="flex justify-between items-center px-1 border-t border-slate-100 pt-3">
-            <span className="text-xs font-bold px-2.5 py-1 bg-slate-900 text-white rounded-full">UberGo</span>
-            <span className="text-lg font-black text-slate-900">₹199</span>
-          </div>
-
-          {/* Core Route Track Display */}
-          <div className="space-y-4 text-left relative pl-6 before:absolute before:left-[9px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-            <div className="relative">
-              <i className="ri-checkbox-blank-circle-fill absolute -left-[22px] top-0.5 text-[10px] text-blue-600 bg-white z-10" />
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pickup</p>
-              <p className="text-sm font-semibold text-slate-800 mt-0.5">Lalpur, Ranchi</p>
-            </div>
-            <div className="relative">
-              <i className="ri-flag-2-fill absolute -left-[25px] top-0.5 text-sm text-red-500 bg-white z-10" />
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Drop Location</p>
-              <p className="text-sm font-semibold text-slate-800 mt-0.5">25B, Etwari Bazar, CKP</p>
-            </div>
+          <div>
+            <h4 className="text-lg font-bold text-slate-900 capitalize tracking-wide">
+              {ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}
+            </h4>
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">
+              <i className="ri-map-pin-user-fill text-blue-500 mr-1"></i>
+              Cash Payment
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Action Controls Layout Row */}
-        <div className="flex gap-3 pt-1">
-          <button 
-            onClick={() => setRidePopupOpen(false)}
-            className="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Ignore
-          </button>
-          <button 
-            onClick={handleAccept}
-            className="flex-1 py-3 rounded-2xl bg-black text-white font-bold text-sm hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer shadow-md"
-          >
-            Accept
-          </button>
+      <div className="space-y-4 relative pl-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 mb-6">
+        <div className="relative">
+          <i className="ri-record-circle-fill absolute -left-6 top-0.5 text-xs text-slate-900 bg-white z-10" />
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pickup</p>
+          <p className="text-sm font-bold text-slate-800 leading-tight mt-0.5 break-words">
+            {ride?.pickup || "Fetching location..."}
+          </p>
         </div>
+        <div className="relative">
+          <i className="ri-map-pin-fill absolute -left-[26px] top-0.5 text-base text-red-500 bg-white z-10" />
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Drop-off</p>
+          <p className="text-sm font-bold text-slate-800 leading-tight mt-0.5 break-words">
+            {ride?.destination || "Fetching destination..."}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <button 
+          onClick={() => setRidePopupOpen(false)} 
+          className="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 active:scale-95 transition-all"
+        >
+          Ignore
+        </button>
+        <button 
+          onClick={setConfirmRidePopupOpen} 
+          className="flex-[2] py-3.5 bg-black text-white font-bold rounded-2xl hover:bg-slate-800 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
+        >
+          <i className="ri-check-line text-lg"></i>
+          Accept Ride
+        </button>
       </div>
     </div>
   );

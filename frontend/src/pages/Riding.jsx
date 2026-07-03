@@ -1,7 +1,20 @@
-import React from "react";
+import React, { useEffect, useState, useContext } from "react";
+import LiveTracking from "../components/LiveTracking";
+import { SocketContext } from "../context/SocketContext";
 import 'remixicon/fonts/remixicon.css';
 
 const Riding = ({ selectedRide, pickup, destination }) => {
+  const [captainLocation, setCaptainLocation] = useState(null);
+  const { receiveMessage } = useContext(SocketContext);
+
+  // Listen for live location updates during the ride
+  useEffect(() => {
+    const cleanup = receiveMessage('captain-location-update', (location) => {
+      setCaptainLocation(location);
+    });
+    return cleanup; 
+  }, [receiveMessage]);
+
   const ride = selectedRide || {
     name: "UberGo",
     price: "₹199",
@@ -14,8 +27,9 @@ const Riding = ({ selectedRide, pickup, destination }) => {
         <i className="ri-home-3-line text-xl" />
       </a>
 
+      {/* REPLACED STATIC IMAGE WITH LIVE TRACKING MAP */}
       <div className="h-[45%] w-full relative z-0">
-        <img className="w-full h-full object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrTkHb14vVfomlEOWqrpKvN6xHaP6rHYlw0HnrqcTEEw&s=10" alt="uber map background" />
+        <LiveTracking captainLocation={captainLocation} />
       </div>
 
       <div className="flex-1 bg-white px-5 py-3.5 flex flex-col justify-between z-10 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] overflow-y-auto rounded-none">
@@ -23,7 +37,7 @@ const Riding = ({ selectedRide, pickup, destination }) => {
           <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-3.5 text-white shadow-md">
             <div className="flex items-center gap-5">
               <div className="relative">
-                <img className="h-11 w-11 rounded-full border-2 border-white/20 object-cover" src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop" alt="Driver Arjun Sharma" />
+                <img className="h-11 w-11 rounded-full border-2 border-white/20 object-cover" src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop" alt="Driver" />
                 <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
               </div>
               <div className="text-left">
@@ -46,7 +60,7 @@ const Riding = ({ selectedRide, pickup, destination }) => {
                   </div>
                   <div className="text-left">
                     <p className="font-semibold text-slate-900 tracking-wide">{ride.name === "Motorbike" ? "Motor Bike" : ride.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium text-blue-600 animate-pulse">Trip in progress...</p>
+                    <p className="text-xs text-blue-600 mt-0.5 font-medium animate-pulse">Trip in progress...</p>
                   </div>
                 </div>
                 <p className="text-xl font-bold text-slate-900">{ride.price}</p>
