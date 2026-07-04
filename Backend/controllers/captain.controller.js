@@ -16,7 +16,8 @@ module.exports.registerCaptain = async (req, res, next) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { fullname, email, password, vehicle } = req.body;
+    // ADDED: Extract country from req.body
+    const { fullname, email, password, vehicle, country } = req.body;
 
     const isCaptainAlreadyExist = await captainModel.findOne({ email });
 
@@ -26,6 +27,7 @@ module.exports.registerCaptain = async (req, res, next) => {
 
     const hashedPassword = await captainModel.hashPassword(password);
 
+    // ADDED: Pass country to the service
     const captain = await captainService.createCaptain({
         firstname: fullname.firstname,
         lastname: fullname.lastname,
@@ -34,7 +36,8 @@ module.exports.registerCaptain = async (req, res, next) => {
         color: vehicle.color,
         plate: vehicle.plate,
         capacity: vehicle.capacity,
-        vehicleType: vehicle.vehicleType
+        vehicleType: vehicle.vehicleType,
+        country 
     });
 
     const token = captain.generateAuthToken();

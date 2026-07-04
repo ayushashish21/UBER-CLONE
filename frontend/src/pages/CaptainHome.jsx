@@ -25,26 +25,35 @@ const CaptainHome = () => {
     if (captain && captain._id) {
       sendMessage('join', { userId: captain._id, userType: 'captain' });
     }
-  }, [captain, sendMessage]);
+  }, [captain]);
 
+  // COMPLETE HTML5 BROWSER GEOLOCATION INTERFACE ROUTINE
   useEffect(() => {
     let locationInterval;
     
     if (navigator.geolocation && captain?._id) {
-      const sendLocation = (position) => {
+      const dispatchLocationFrame = (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         
         setCurrentLocation({ lat, lng }); 
-        sendMessage('updateLocationCaptain', { userId: captain._id, location: { ltd: lat, lng: lng } });
+        
+        // Emits structural data every 10 seconds via updateLocationCaptain channel
+        sendMessage('updateLocationCaptain', {
+          userId: captain._id,
+          location: { ltd: lat, lng: lng }
+        });
       };
 
-      navigator.geolocation.getCurrentPosition(sendLocation);
+      navigator.geolocation.getCurrentPosition(dispatchLocationFrame, 
+        (err) => console.error("[GEOLOCATION_ERROR]", err.message),
+        { enableHighAccuracy: true }
+      );
 
       locationInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
-          sendLocation,
-          (error) => console.error("Geolocation Error:", error),
+          dispatchLocationFrame,
+          (error) => console.error("[GEOLOCATION_ERROR]", error.message),
           { enableHighAccuracy: true }
         );
       }, 10000);
@@ -55,6 +64,7 @@ const CaptainHome = () => {
 
   useEffect(() => {
     const cleanup = receiveMessage('new-ride', (data) => {
+      console.log("[SOCKET] Incoming production ride matched payload payload:", data);
       setRideData(data);
       setRidePopupOpen(true);
     });
@@ -76,12 +86,35 @@ const CaptainHome = () => {
         setConfirmRidePopupOpen(true);
       }
     } catch (error) {
-      alert("Failed to confirm ride.");
+      console.error("[TRANSACTION_REJECTED]", error.message);
+      alert("Failed to secure matched ride selection.");
     }
   };
 
   return (
     <div className="relative h-screen bg-slate-100 overflow-hidden">
+      
+      {/* MODULAR DEBUGGING TESTING POPUP CONTROL BUTTON */}
+      <button 
+        onClick={() => {
+          console.log("[DEBUG_UI] Captain received local testing notification trigger.");
+          console.log("[DEBUG_UI] State modification request: Open Ride Notification Modal.");
+          const testingDataMock = {
+            pickup: "Local Node Proximity Street, Ranchi Center",
+            destination: "Railway Terminus Hub Exit Road, Ranchi",
+            fare: 480,
+            user: { fullname: { firstname: "Debug", lastname: "Customer Profile" } }
+          };
+          console.log("[DEBUG_UI] Current bound testing object metadata:", testingDataMock);
+          setRideData(testingDataMock);
+          setRidePopupOpen(true);
+          console.log("[DEBUG_UI] Interactive modal panel opened visually.");
+        }}
+        className="absolute top-24 left-5 z-50 bg-amber-500 hover:bg-amber-600 transition-colors text-white text-xs px-3 py-2 rounded-xl font-bold shadow-md active:scale-95 transform"
+      >
+        Test Ride UI Alert Window
+      </button>
+
       <img
         className="w-16 absolute left-5 top-5 z-10 pointer-events-none"
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Uber_logo_2018.svg/960px-Uber_logo_2018.svg.png"

@@ -3,7 +3,6 @@ const userService = require('../services/user.service');
 const { validationResult } = require('express-validator');
 const blackListTokenModel = require('../models/blackListToken.model');
 
-
 /**
  * Register a new user
  * @param {Object} req - Express request object
@@ -16,7 +15,8 @@ module.exports.registerUser = async (req, res, next) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { fullname, email, password } = req.body;
+    // ADDED: Extract country from req.body
+    const { fullname, email, password, country } = req.body;
 
     const isUserAlready = await userModel.findOne({ email });
 
@@ -26,11 +26,13 @@ module.exports.registerUser = async (req, res, next) => {
 
     const hashPassword = await userModel.hashPassword(password);
 
+    // ADDED: Pass country to the service
     const user = await userService.createUser({
         firstname: fullname.firstname,
         lastname: fullname.lastname,
         email,
-        password: hashPassword
+        password: hashPassword,
+        country 
     });
 
     const token = user.generateAuthToken();

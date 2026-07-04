@@ -1,134 +1,69 @@
-const axios = require("axios");
+const axios = require('axios');
 
+// Helper to safely grab the token from the backend .env
+const getMapboxToken = () => {
+    const token = process.env.MAPBOX_ACCESS_TOKEN || process.env.VITE_MAPBOX_ACCESS_TOKEN || process.env.MAPBOX_API;
+    if (!token) throw new Error("Mapbox token is missing in backend .env file");
+    return token;
+};
 
-module.exports.getAddressCoordinate = async (address) => {
-    const apiKey = process.env.MAPBOX_ACCESS_TOKEN;
-
-    if (!apiKey) {
-        throw new Error("Mapbox access token is missing.");
-    }
-
+module.exports.getAddressCoordinate = async (address, countryCode = '') => {
+    const countryParam = countryCode ? `&country=${countryCode.toLowerCase()}` : '';
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${getMapboxToken()}${countryParam}&limit=1`;
+    
     try {
-        const encodedAddress = encodeURIComponent(address);
-
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?limit=1&access_token=${apiKey}`;
-
         const response = await axios.get(url);
-
-        if (
-            response.data &&
-            response.data.features &&
-            response.data.features.length > 0
-        ) {
-            const [lng, lat] =
-                response.data.features[0].geometry.coordinates;
-
+        if (response.data.features.length > 0) {
+            const coordinates = response.data.features[0].geometry.coordinates;
             return {
-                lat,
-                lng,
+                lng: coordinates[0],
+                ltd: coordinates[1] 
             };
         }
-
-        throw new Error("Address not found");
-    } catch (err) {
-        console.error(err.message);
-        throw err;
+        throw new Error('No coordinates matched input query parameters.');
+    } catch (error) {
+        console.error("[MAPBOX_ERROR] Coordinate mapping failed:", error.response?.data || error.message);
+        throw new Error(`Mapbox coordinate mapping failed`);
     }
 };
 
 module.exports.getDistanceTime = async (origin, destination) => {
-    if (!origin || !destination) {
-        throw new Error("Origin and destination are required");
-    }
-
-    const apiKey = process.env.MAPBOX_ACCESS_TOKEN;
-
-    const originCoords = await module.exports.getAddressCoordinate(origin);
-    const destinationCoords = await module.exports.getAddressCoordinate(destination);
-
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${originCoords.lng},${originCoords.lat};${destinationCoords.lng},${destinationCoords.lat}?overview=false&access_token=${apiKey}`;
-
     try {
+        const startCoords = await module.exports.getAddressCoordinate(origin);
+        const endCoords = await module.exports.getAddressCoordinate(destination);
+        
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${startCoords.lng},${startCoords.ltd};${endCoords.lng},${endCoords.ltd}?access_token=${getMapboxToken()}`;
+        
         const response = await axios.get(url);
-
-        if (
-            response.data &&
-            response.data.routes &&
-            response.data.routes.length > 0
-        ) {
-            const route = response.data.routes[0];
-
-            // Raw values
-            const distance = route.distance;
-            const duration = route.duration;
-
-            // Formatted values
-            const distanceText = `${(distance / 1000).toFixed(2)} km`;
-
-            const days = Math.floor(duration / 86400);
-            const hours = Math.floor((duration % 86400) / 3600);
-            const minutes = Math.floor((duration % 3600) / 60);
-
-            let durationText = "";
-
-            if (days > 0)
-                durationText += `${days} day${days > 1 ? "s" : ""} `;
-
-            if (hours > 0)
-                durationText += `${hours} hour${hours > 1 ? "s" : ""} `;
-
-            if (minutes > 0)
-                durationText += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-
+        if (response.data.routes.length > 0) {
             return {
-                distance,
-                duration,
-                distanceText,
-                durationText: durationText.trim()
+                distance: { value: response.data.routes[0].distance },
+                duration: { value: response.data.routes[0].duration }
             };
         }
-
-        throw new Error("No route found.");
-    } catch (err) {
-        console.error(err.message);
-        throw err;
+        throw new Error('No navigable route found between points.');
+    } catch (error) {
+        console.error("[MAPBOX_ERROR] Routing failed:", error.response?.data || error.message);
+        throw new Error(`Distance computation transaction dropped`);
     }
 };
 
-module.exports.getAutoCompleteSuggestions = async (input) => {
-    if (!input) {
-        throw new Error("Query is required");
-    }
-
-    const apiKey = process.env.MAPBOX_ACCESS_TOKEN;
-
-    if (!apiKey) {
-        throw new Error("Mapbox access token is missing.");
-    }
+module.exports.getAutoCompleteSuggestions = async (input, countryCode = '') => {
+    if (!input) throw new Error('Query context pattern missing');
+    
+    // Injects the country restriction into the Mapbox query (e.g., &country=in)
+    const countryParam = countryCode ? `&country=${countryCode.toLowerCase()}` : '';
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(input)}.json?access_token=${getMapboxToken()}${countryParam}&autocomplete=true&limit=5`;
 
     try {
-        const encodedInput = encodeURIComponent(input);
-
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedInput}.json?autocomplete=true&limit=5&access_token=${apiKey}`;
-
         const response = await axios.get(url);
-
-        if (
-            response.data &&
-            response.data.features
-        ) {
-            return response.data.features.map((place) => ({
-                name: place.place_name,
-                coordinates: {
-                    lat: place.center[1],
-                    lng: place.center[0]
-                }
-            }));
+        if (response.data && response.data.features) {
+            // Mapbox v5 standardizes the readable address under 'place_name'
+            return response.data.features.map(item => item.place_name);
         }
-
         return [];
-    } catch (err) {
-        console.error(err.message);
-        throw err;
+    } catch (error) {
+        console.error("[MAPBOX_ERROR] Autocomplete lookup failure:", error.response?.data || error.message);
+        throw new Error(`Autocomplete lookup failure`);
     }
 };

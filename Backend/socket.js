@@ -1,29 +1,24 @@
+const socketIo = require('socket.io');
 const userModel = require('./models/user.model');
 const captainModel = require('./models/captain.model');
-const rideModel = require('./models/ride.model'); // Added to verify active rides
 
-let io = null;
+let io;
 
-function initializeSocket(server, options = {}) {
-    if (io) {
-        return io;
-    }
-
-    const { Server } = require('socket.io');
-
-    io = new Server(server, {
+function initializeSocket(server) {
+    io = socketIo(server, {
         cors: {
-            origin: options.origin || ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
-            credentials: true,
-        },
-        ...options,
+            origin: '*',
+            methods: ['GET', 'POST']
+        }
     });
 
     io.on('connection', (socket) => {
-        console.log(`Socket connected: ${socket.id}`);
+        console.log(`[SOCKET_CONNECT] Active session assigned payload: ${socket.id}`);
 
         socket.on('join', async (data) => {
             const { userId, userType } = data;
+            console.log(`[SOCKET_JOINED] Member ID: ${userId} bound to Group role: ${userType}`);
+            
             if (userType === 'user') {
                 await userModel.findByIdAndUpdate(userId, { socketId: socket.id });
             } else if (userType === 'captain') {
@@ -31,51 +26,40 @@ function initializeSocket(server, options = {}) {
             }
         });
 
-        // PHASE 3: Continuously update captain's live location AND relay to User
         socket.on('updateLocationCaptain', async (data) => {
             const { userId, location } = data;
+            if (!userId || !location || !location.ltd || !location.lng) {
+                console.warn(`[SOCKET_WARN] Invalid telemetry transmission package ignored from connection ${socket.id}`);
+                return;
+            }
+
+            console.log(`[TELEMETRY_RECEIVE] Driver Profile: ${userId} -> Coordinates: [Lat: ${location.ltd}, Lng: ${location.lng}]`);
             
-            if (location && location.ltd && location.lng) {
-                // 1. Save latest location to the Captain's DB profile
-                await captainModel.findByIdAndUpdate(userId, { 
-                    'location.lat': location.ltd, 
-                    'location.lng': location.lng 
+            try {
+                await captainModel.findByIdAndUpdate(userId, {
+                    location: {
+                        ltd: Number(location.ltd),
+                        lng: Number(location.lng)
+                    }
                 });
-
-                // 2. Find if this captain is currently assigned to an active ride
-                const activeRide = await rideModel.findOne({
-                    captain: userId,
-                    status: { $in: ['accepted', 'ongoing'] }
-                }).populate('user');
-
-                // 3. If they are on a ride, emit the new coordinates securely to the Rider!
-                if (activeRide && activeRide.user && activeRide.user.socketId) {
-                    io.to(activeRide.user.socketId).emit('captain-location-update', {
-                        lat: location.ltd,
-                        lng: location.lng
-                    });
-                }
+                console.log(`[TELEMETRY_SYNC] Database successfully persistent updated coordinates for Driver: ${userId}`);
+            } catch (err) {
+                console.error(`[TELEMETRY_CRASH] Database persistent state tracking write failed: ${err.message}`);
             }
         });
 
         socket.on('disconnect', () => {
-            console.log(`Socket disconnected: ${socket.id}`);
+            console.log(`[SOCKET_DISCONNECT] Session expired or dropped: ${socket.id}`);
         });
     });
-
-    return io;
 }
 
-function sendMessageToSocketId(socketId, eventName, payload) {
-    if (!io) {
-        console.warn('Socket.io has not been initialized yet.');
-        return false;
+function sendMessageToSocketId(socketId, eventName, messagePayload) {
+    if (io) {
+        io.to(socketId).emit(eventName, messagePayload);
+    } else {
+        console.error('[SOCKET_ERROR] Operation blocked. IO pipeline remains uninitialized.');
     }
-    io.to(socketId).emit(eventName, payload);
-    return true;
 }
 
-module.exports = {
-    initializeSocket,
-    sendMessageToSocketId,
-};
+module.exports = { initializeSocket, sendMessageToSocketId };

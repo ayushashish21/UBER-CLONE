@@ -1,39 +1,34 @@
-const captainModel = require("../models/captain.model");
+const captainModel = require('../models/captain.model');
 
 /**
  * Create a new captain
  */
 module.exports.createCaptain = async ({
-  firstname,
-  lastname,
-  email,
-  password,
-  color,
-  plate,
-  capacity,
-  vehicleType,
+    firstname, lastname, email, password, color, plate, capacity, vehicleType, country
 }) => {
-  if (!firstname || !email || !password || !color || !plate || !capacity || !vehicleType) {
-    throw new Error("All fields are required");
-  }
-
-  const captain = await captainModel.create({
-    fullname: {
-      firstname,
-      lastname,
-    },
-    email,
-    password,
-    vehicle: {
-      color,
-      plate,
-      capacity,
-      vehicleType
+    // ADDED: country to the validation check
+    if (!firstname || !email || !password || !color || !plate || !capacity || !vehicleType || !country) {
+        throw new Error('All fields are required');
     }
-  });
+    
+    const captain = captainModel.create({
+        fullname: {
+            firstname,
+            lastname
+        },
+        email,
+        password,
+        country, // ADDED: Save country to database
+        vehicle: {
+            color,
+            plate,
+            capacity,
+            vehicleType
+        }
+    });
 
-  return captain;
-}
+    return captain;
+};
 
 /**
  * Find nearby active captains based on coordinates (Haversine formula)

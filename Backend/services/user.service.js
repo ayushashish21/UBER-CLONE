@@ -7,6 +7,7 @@ const userModel = require('../models/user.model');
  * @param {string} userData.lastname - User's last name
  * @param {string} userData.email - User's email
  * @param {string} userData.password - User's hashed password
+ * @param {string} userData.country - User's country code
  * @returns {Promise<Object>} Created user object
  * @throws {Error} If required fields are missing
  */
@@ -14,9 +15,11 @@ module.exports.createUser = async ({
     firstname,
     lastname,
     email,
-    password
+    password,
+    country
 }) => {
-    if (!firstname || !email || !password) {
+    // ADDED: country to the validation check
+    if (!firstname || !email || !password || !country) {
         throw new Error('All fields are required');
     }
 
@@ -26,7 +29,8 @@ module.exports.createUser = async ({
             lastname
         },
         email,
-        password
+        password,
+        country // ADDED: Save country to database
     });
 
     return user;
