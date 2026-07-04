@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import 'remixicon/fonts/remixicon.css';
 
-const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
+const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel, driverData }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -14,26 +14,38 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
 
   if (!selectedRide) return null;
 
+  // Extract the dynamically populated captain data from the socket payload
+  const captain = driverData?.captain;
+
   return (
     <div ref={containerRef} className="mt-6 space-y-4">
       {/* Top Driver Info Card */}
       <div className="flex items-center justify-between rounded-2xl bg-slate-900 p-4 text-white shadow-md">
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           <div className="relative">
-            {/* Synced Driver Profile Image */}
-            <img 
-              className="h-12 w-12 rounded-full border-2 border-white/20 object-cover"
-              src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop" 
-              alt="Driver Arjun Sharma" 
-            />
+            {/* Dynamic Driver Profile Image Initial */}
+            <div className="h-12 w-12 rounded-full border-2 border-white/20 bg-slate-700 flex items-center justify-center text-xl font-bold uppercase shadow-sm">
+                {captain?.fullname?.firstname?.[0] || 'C'}
+            </div>
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" />
           </div>
           <div className="text-left">
-            <h5 className="font-semibold text-base tracking-wide">Arjun Sharma</h5>
-            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-              <i className="ri-star-fill text-amber-400" /> 4.9 • MH-12-GQ-4321
+            <h5 className="font-semibold text-base tracking-wide capitalize">
+                {captain?.fullname?.firstname} {captain?.fullname?.lastname}
+            </h5>
+            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5 uppercase">
+              <i className="ri-star-fill text-amber-400" /> 4.9 • <span className="text-white font-semibold ml-1">{captain?.vehicle?.plate}</span>
+            </p>
+            <p className="text-[11px] text-slate-300 mt-1 capitalize font-medium">
+                {captain?.vehicle?.color} {captain?.vehicle?.vehicleType}
             </p>
           </div>
+        </div>
+        
+        {/* OTP Display Block for the User */}
+        <div className="text-center bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">OTP</p>
+            <h4 className="text-xl font-black tracking-widest text-emerald-400">{driverData?.otp || '----'}</h4>
         </div>
       </div>
 
@@ -57,7 +69,7 @@ const WaitingForDriver = ({ selectedRide, pickup, destination, onCancel }) => {
                   {selectedRide.name === "Motorbike" ? "Motor Bike" : selectedRide.name}
                 </p>
                 <p className="text-xs mt-0.5 font-medium text-emerald-600 animate-pulse">
-                  Driver arriving in 3 mins
+                  Driver arriving soon
                 </p>
               </div>
             </div>

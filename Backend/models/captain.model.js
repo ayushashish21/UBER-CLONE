@@ -29,7 +29,8 @@ const captainSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Country choice is mandatory'],
         uppercase: true,
-        enum: ['IN', 'US']
+        minlength: [2, 'Country code must be exactly 2 characters'],
+        maxlength: [2, 'Country code must be exactly 2 characters']
     },
     socketId: {
         type: String,

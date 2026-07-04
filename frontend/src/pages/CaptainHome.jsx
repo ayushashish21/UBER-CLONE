@@ -25,7 +25,7 @@ const CaptainHome = () => {
     if (captain && captain._id) {
       sendMessage('join', { userId: captain._id, userType: 'captain' });
     }
-  }, [captain]);
+  }, [captain, sendMessage]);
 
   // COMPLETE HTML5 BROWSER GEOLOCATION INTERFACE ROUTINE
   useEffect(() => {
@@ -93,27 +93,6 @@ const CaptainHome = () => {
 
   return (
     <div className="relative h-screen bg-slate-100 overflow-hidden">
-      
-      {/* MODULAR DEBUGGING TESTING POPUP CONTROL BUTTON */}
-      <button 
-        onClick={() => {
-          console.log("[DEBUG_UI] Captain received local testing notification trigger.");
-          console.log("[DEBUG_UI] State modification request: Open Ride Notification Modal.");
-          const testingDataMock = {
-            pickup: "Local Node Proximity Street, Ranchi Center",
-            destination: "Railway Terminus Hub Exit Road, Ranchi",
-            fare: 480,
-            user: { fullname: { firstname: "Debug", lastname: "Customer Profile" } }
-          };
-          console.log("[DEBUG_UI] Current bound testing object metadata:", testingDataMock);
-          setRideData(testingDataMock);
-          setRidePopupOpen(true);
-          console.log("[DEBUG_UI] Interactive modal panel opened visually.");
-        }}
-        className="absolute top-24 left-5 z-50 bg-amber-500 hover:bg-amber-600 transition-colors text-white text-xs px-3 py-2 rounded-xl font-bold shadow-md active:scale-95 transform"
-      >
-        Test Ride UI Alert Window
-      </button>
 
       <img
         className="w-16 absolute left-5 top-5 z-10 pointer-events-none"
@@ -133,8 +112,18 @@ const CaptainHome = () => {
         <CaptainDetails captain={captain} />
       </div>
 
-      <RidePopup ride={rideData} ridePopupOpen={ridePopupOpen} setRidePopupOpen={setRidePopupOpen} setConfirmRidePopupOpen={handleAcceptRide} />
-      <ConfirmRidePopup ride={rideData} confirmRidePopupOpen={confirmRidePopupOpen} setConfirmRidePopupOpen={setConfirmRidePopupOpen} setRidePopupOpen={setRidePopupOpen} />
+      <RidePopup 
+        ride={rideData} 
+        ridePopupOpen={ridePopupOpen} 
+        setRidePopupOpen={setRidePopupOpen} 
+        setConfirmRidePopupOpen={handleAcceptRide} 
+      />
+      <ConfirmRidePopup 
+        ride={rideData} 
+        confirmRidePopupOpen={confirmRidePopupOpen} 
+        setConfirmRidePopupOpen={setConfirmRidePopupOpen} 
+        setRidePopupOpen={setRidePopupOpen} 
+      />
     </div>
   );
 };

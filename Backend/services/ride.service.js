@@ -61,9 +61,43 @@ module.exports.confirmRide = async ({ rideId, captain }) => {
         { _id: rideId, status: 'pending' },
         { status: 'accepted', captain: captain._id },
         { new: true }
-    ).populate('user').populate('captain');
+    ).populate('user').populate('captain').select('+otp');
 
     if (!ride) throw new Error('Ride not found or already accepted');
+
+    return ride;
+};
+
+module.exports.startRide = async ({ rideId, captain }) => {
+    if (!rideId || !captain) throw new Error('Ride ID and Captain are required');
+
+    const ride = await rideModel.findOneAndUpdate(
+        { _id: rideId, captain: captain._id, status: 'accepted' },
+        { status: 'ongoing' },
+        { new: true }
+    ).populate('user').populate('captain');
+
+    if (!ride) throw new Error('Ride not found or not currently accepted by you');
+
+    return ride;
+};
+
+module.exports.endRide = async ({ rideId, captain, otp }) => {
+    if (!rideId || !captain || !otp) throw new Error('Ride ID, Captain, and OTP are required');
+
+    const ride = await rideModel.findOne({
+        _id: rideId, captain: captain._id, status: 'ongoing'
+    }).select('+otp').populate('user').populate('captain');
+
+    if (!ride) throw new Error('Ride not found or not ongoing');
+
+    // Strict string matching to prevent type mutation bypass
+    if (String(ride.otp) !== String(otp)) {
+        throw new Error('Invalid OTP');
+    }
+
+    ride.status = 'completed';
+    await ride.save();
 
     return ride;
 };

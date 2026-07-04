@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Country choice is mandatory'],
         uppercase: true,
-        enum: ['IN', 'US'] // Extensible collection of ISO-3166 codes
+        minlength: [2, 'Country code must be exactly 2 characters'],
+        maxlength: [2, 'Country code must be exactly 2 characters']
     },
     socketId: {
         type: String,
