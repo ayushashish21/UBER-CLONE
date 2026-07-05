@@ -1,53 +1,64 @@
-import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { io } from 'socket.io-client';
+import React, {
+    createContext,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import { io } from "socket.io-client";
 
-// 1. Export the context as SocketContext (matches standard conventions)
 export const SocketContext = createContext(null);
 
-// 2. Rename the wrapper component to SocketProvider
 const SocketProvider = ({ children }) => {
     const socketRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
 
     const connect = useCallback(() => {
-        if (socketRef.current?.connected) return;
+        // Prevent multiple socket instances
+        if (socketRef.current) return;
 
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
 
-        // Safety check: If VITE_BASE_URL has '/api' at the end, strip it out.
-        // Socket.io MUST connect to the root URL (http://localhost:4000)
-        const rawBaseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:4000';
-        const socketUrl = rawBaseUrl.replace('/api', ''); 
+        const rawBaseUrl =
+            import.meta.env.VITE_BASE_URL || "http://localhost:4000";
+
+        const socketUrl = rawBaseUrl.replace("/api", "");
 
         const socket = io(socketUrl, {
-            auth: { token },
-            // REMOVED: transports: ['websocket'] so it can fall back to polling if the handshake fails!
+            auth: {
+                token,
+            },
             reconnection: true,
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 1000,
         });
 
         socketRef.current = socket;
 
-        socket.on('connect', () => {
+        socket.on("connect", () => {
+            console.log("🟢 Socket Connected:", socket.id);
             setIsConnected(true);
-            console.log('🟢 Socket connected:', socket.id);
         });
 
-        socket.on('disconnect', () => {
+        socket.on("disconnect", (reason) => {
+            console.log("🔴 Socket Disconnected:", reason);
             setIsConnected(false);
-            console.log('🔴 Socket disconnected');
         });
 
-        socket.on('connect_error', (error) => {
-            console.error('❌ Socket connection error:', error.message);
+        socket.on("connect_error", (err) => {
+            console.error("❌ Socket Error:", err.message);
         });
     }, []);
 
     const disconnect = useCallback(() => {
-        if (socketRef.current) {
-            socketRef.current.disconnect();
-            socketRef.current = null;
-            setIsConnected(false);
-        }
+        if (!socketRef.current) return;
+
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
+
+        setIsConnected(false);
     }, []);
 
     useEffect(() => {
@@ -56,34 +67,37 @@ const SocketProvider = ({ children }) => {
         };
     }, [disconnect]);
 
-    const sendMessage = useCallback((eventName, payload) => {
-        if (!socketRef.current) {
-            console.warn('Socket is not initialized yet.');
+    const sendMessage = useCallback((event, payload) => {
+        if (!socketRef.current?.connected) {
+            console.warn("Socket not connected.");
             return false;
         }
 
-        socketRef.current.emit(eventName, payload);
+        socketRef.current.emit(event, payload);
         return true;
     }, []);
 
-    const receiveMessage = useCallback((eventName, callback) => {
-        if (!socketRef.current) return () => {};
+    const receiveMessage = useCallback((event, callback) => {
+        if (!socketRef.current) return () => { };
 
-        socketRef.current.on(eventName, callback);
+        socketRef.current.on(event, callback);
 
         return () => {
-            socketRef.current?.off(eventName, callback);
+            socketRef.current?.off(event, callback);
         };
     }, []);
 
-    const value = useMemo(() => ({
-        socket: socketRef.current,
-        isConnected,
-        connect,
-        disconnect,
-        sendMessage,
-        receiveMessage,
-    }), [isConnected, connect, disconnect, sendMessage, receiveMessage]);
+    const value = useMemo(
+        () => ({
+            socket: socketRef.current,
+            isConnected,
+            connect,
+            disconnect,
+            sendMessage,
+            receiveMessage,
+        }),
+        [isConnected, connect, disconnect, sendMessage, receiveMessage]
+    );
 
     return (
         <SocketContext.Provider value={value}>
@@ -92,4 +106,4 @@ const SocketProvider = ({ children }) => {
     );
 };
 
-export default SocketProvider; // Exporting as Provider!
+export default SocketProvider;

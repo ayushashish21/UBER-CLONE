@@ -8,16 +8,14 @@ import UserContext from './context/UserContext.jsx';
 import CaptainContext from './context/CaptainContext.jsx';
 import SocketProvider from './context/SocketContext.jsx'; // Changed to SocketProvider!
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <SocketProvider>
-      <CaptainContext>
-        <UserContext>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </UserContext>
-      </CaptainContext>
-    </SocketProvider>
-  </StrictMode>,
-)
+createRoot(document.getElementById("root")).render(
+  <SocketProvider>
+    <CaptainContext>
+      <UserContext>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </UserContext>
+    </CaptainContext>
+  </SocketProvider>
+);

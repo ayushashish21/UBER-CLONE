@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import axios from "axios";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { useNavigate } from "react-router-dom";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
@@ -13,6 +14,8 @@ import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   const [panelType, setPanelType] = useState("search");
   const [panelOpen, setPanelOpen] = useState(false);
 
@@ -26,38 +29,63 @@ const Home = () => {
   const [fareLoading, setFareLoading] = useState(false);
   const [rideError, setRideError] = useState("");
   const [rideOptions, setRideOptions] = useState([]);
-  
+
   const [confirmedRideData, setConfirmedRideData] = useState(null);
   const [captainLocation, setCaptainLocation] = useState(null);
 
-  const { connect, sendMessage, receiveMessage } = useContext(SocketContext);
+  const { connect, sendMessage, receiveMessage, isConnected } = useContext(SocketContext);
   const { user } = useContext(UserDataContext);
 
   useEffect(() => {
     connect();
   }, [connect]);
 
+  // FIX: This effect previously only re-ran when `user` changed. If the socket
+  // was still mid-handshake when `user._id` became available, sendMessage()
+  // would silently no-op (socket not connected yet) and the join was lost
+  // forever for that session — this is why the rider never received
+  // 'ride-confirmed' and stayed stuck on "Looking for a Driver". Now it also
+  // re-fires once the socket actually finishes connecting.
   useEffect(() => {
-    if (!user || !user._id) return; 
+    if (!user || !user._id) return;
+    if (!isConnected) return;
+
     sendMessage('join', { userType: 'user', userId: user._id });
-  }, [user, sendMessage]); 
+  }, [user, isConnected, sendMessage]);
 
   // Listen for Ride Acceptance
   useEffect(() => {
     const cleanup = receiveMessage('ride-confirmed', (data) => {
       setConfirmedRideData(data);
-      setPanelOpen(false); 
-      setPanelType("accepted"); 
+      setPanelOpen(false);
+      setPanelType("accepted");
     });
-    return cleanup; 
+    return cleanup;
   }, [receiveMessage]);
+
+  // Listen for the captain starting the ride -> move user to the live riding screen
+  useEffect(() => {
+    const cleanup = receiveMessage('ride-started', (data) => {
+      setConfirmedRideData(data);
+      navigate('/riding', { state: { ride: data, selectedRide, pickup, destination } });
+    });
+    return cleanup;
+  }, [receiveMessage, navigate, selectedRide, pickup, destination]);
+
+  // Listen for the captain completing the ride -> user should see ride ended / payment
+  useEffect(() => {
+    const cleanup = receiveMessage('ride-ended', (data) => {
+      navigate('/riding', { state: { ride: data, selectedRide, pickup, destination, rideEnded: true } });
+    });
+    return cleanup;
+  }, [receiveMessage, navigate, selectedRide, pickup, destination]);
 
   // PHASE 4: Listen for live location updates from the backend
   useEffect(() => {
     const cleanup = receiveMessage('captain-location-update', (location) => {
       setCaptainLocation(location);
     });
-    return cleanup; 
+    return cleanup;
   }, [receiveMessage]);
 
   const panelRef = useRef(null);
@@ -207,11 +235,10 @@ const Home = () => {
       );
 
       setRideError("");
-      setPanelType("looking"); 
+      setPanelType("looking");
     } catch (error) {
-      // THIS WILL NOW PRINT THE EXACT BACKEND REJECTION REASON:
       console.error("Backend Error Details:", error.response?.data || error.message);
-      
+
       const errorMessage = error.response?.data?.error || error.response?.data?.errors?.[0]?.msg || "Could not create ride.";
       setRideError(errorMessage);
     }
@@ -357,12 +384,12 @@ const Home = () => {
           )}
 
           {panelType === "accepted" && (
-            <WaitingForDriver 
-              selectedRide={selectedRide} 
-              pickup={pickup} 
+            <WaitingForDriver
+              selectedRide={selectedRide}
+              pickup={pickup}
               destination={destination}
               driverData={confirmedRideData}
-              onCancel={handleClearSelection} 
+              onCancel={handleClearSelection}
             />
           )}
 
