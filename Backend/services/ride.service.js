@@ -106,6 +106,7 @@ module.exports.createRide = async ({
     vehicleType,
     paymentMethod,
 }) => {
+
     if (!user || !pickup || !destination || !vehicleType || !paymentMethod) {
         throw new Error("All fields are required.");
     }
@@ -116,19 +117,24 @@ module.exports.createRide = async ({
         fare[vehicleType] === undefined ||
         isNaN(fare[vehicleType])
     ) {
-        throw new Error(
-            `Invalid fare for vehicle type: ${vehicleType}`
-        );
+        throw new Error(`Invalid fare for vehicle type: ${vehicleType}`);
     }
 
     const ride = await rideModel.create({
         user,
         pickup,
         destination,
+        vehicleType,
         fare: fare[vehicleType],
         paymentMethod,
         otp: getOtp(6),
         status: "pending",
+
+        // timeline
+        acceptedAt: null,
+        startedAt: null,
+        completedAt: null,
+        paidAt: null,
     });
 
     return ride;
@@ -156,6 +162,7 @@ module.exports.confirmRide = async ({
             {
                 status: "accepted",
                 captain: captain._id,
+                acceptedAt: new Date()
             },
             {
                 returnDocument: "after",
@@ -196,6 +203,7 @@ module.exports.startRide = async ({
             },
             {
                 status: "ongoing",
+                startedAt: new Date()
             },
             {
                 returnDocument: "after",
@@ -223,10 +231,9 @@ module.exports.endRide = async ({
     captain,
     otp,
 }) => {
+
     if (!rideId || !captain || !otp) {
-        throw new Error(
-            "Ride ID, Captain and OTP are required."
-        );
+        throw new Error("Ride ID, Captain and OTP are required.");
     }
 
     const ride = await rideModel
@@ -243,24 +250,83 @@ module.exports.endRide = async ({
         throw new Error("Ride not found.");
     }
 
-    if (
-        String(ride.otp).trim() !==
-        String(otp).trim()
-    ) {
+    if (String(ride.otp).trim() !== String(otp).trim()) {
         throw new Error("Invalid OTP.");
     }
 
     ride.status = "completed";
+    ride.completedAt = new Date();
 
+    // Cash rides are immediately paid.
     if (ride.paymentMethod === "cash") {
-
         ride.paymentStatus = "paid";
-
+        ride.paidAt = new Date();
     }
 
     await ride.save();
 
     return ride;
+};
+
+/*
+=========================================
+MARK RIDE AS PAID
+=========================================
+*/
+module.exports.markRideAsPaid = async ({
+    rideId,
+    paymentId,
+    orderId,
+    signature,
+}) => {
+
+    if (!rideId || !paymentId || !orderId || !signature) {
+        throw new Error("Payment details are required.");
+    }
+
+    const ride = await rideModel.findById(rideId);
+
+    if (!ride) {
+        throw new Error("Ride not found.");
+    }
+
+    if (ride.paymentStatus === "paid") {
+        return ride;
+    }
+
+    ride.paymentStatus = "paid";
+    ride.paymentID = paymentId;
+    ride.orderId = orderId;
+    ride.signature = signature;
+
+    // Timeline
+    ride.paidAt = new Date();
+
+    await ride.save();
+
+    return ride;
+};
+
+/*
+=========================================
+GET USER RIDE HISTORY
+=========================================
+*/
+module.exports.getRideHistory = async (userId) => {
+
+    if (!userId) {
+        throw new Error("User ID is required.");
+    }
+
+    const rides = await rideModel
+        .find({ user: userId })
+        .populate({
+            path: "captain",
+            select: "fullname vehicle",
+        })
+        .sort({ createdAt: -1 });
+
+    return rides;
 };
 
 /*

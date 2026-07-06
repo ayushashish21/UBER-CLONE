@@ -14,6 +14,7 @@ import UserLogout from './pages/UserLogout'
 import Riding from './pages/Riding'
 import CaptainRiding from './pages/CaptainRiding'
 import Payment from './pages/Payment'
+import RideHistory from "./pages/RideHistory";
 
 /**
  * Main App Component
@@ -48,6 +49,15 @@ const App = () => {
           element={
             <UserProtectWrapper>
               <Payment />
+            </UserProtectWrapper>
+          }
+        />
+
+        <Route
+          path="/ride-history"
+          element={
+            <UserProtectWrapper>
+              <RideHistory />
             </UserProtectWrapper>
           }
         />

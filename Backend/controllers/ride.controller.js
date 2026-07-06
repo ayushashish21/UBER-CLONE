@@ -126,3 +126,30 @@ module.exports.endRide = async (req, res) => {
         return res.status(400).json({ error: err.message });
     }
 };
+
+/*
+=========================================
+GET RIDE HISTORY
+=========================================
+*/
+module.exports.getRideHistory = async (req, res) => {
+
+    try {
+
+        const rides = await rideService.getRideHistory(req.user._id);
+
+        return res.status(200).json({
+            success: true,
+            rides
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+
+};

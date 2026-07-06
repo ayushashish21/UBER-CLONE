@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import axios from "axios";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { useNavigate } from "react-router-dom";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import VehiclePanel from "../components/VehiclePanel";
 import ConfirmRide from "../components/ConfirmRide";
@@ -12,6 +11,7 @@ import LiveTracking from "../components/LiveTracking";
 import 'remixicon/fonts/remixicon.css';
 import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
+import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -262,6 +262,15 @@ const Home = () => {
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Uber_logo_2018.svg/960px-Uber_logo_2018.svg.png"
         alt="Uber Logo"
       />
+      <Link
+        to="/ride-history"
+        className="absolute top-5 right-5 z-30 flex items-center gap-2 bg-white/95 backdrop-blur px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+      >
+        <i className="ri-history-line text-lg"></i>
+        <span className="font-semibold text-sm">
+          Ride History
+        </span>
+      </Link>
 
       {/* GPS Tracking Overlay (Optional/Debugging) */}
       {panelType === "accepted" && captainLocation && (
