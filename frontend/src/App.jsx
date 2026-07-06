@@ -13,6 +13,7 @@ import UserProtectWrapper from './pages/UserProtectWrapper'
 import UserLogout from './pages/UserLogout'
 import Riding from './pages/Riding'
 import CaptainRiding from './pages/CaptainRiding'
+import Payment from './pages/Payment'
 
 /**
  * Main App Component
@@ -35,6 +36,18 @@ const App = () => {
           element={
             <UserProtectWrapper>
               <Home />
+            </UserProtectWrapper>
+          }
+        />
+
+        {/* ADDED: payment screen, gated behind UserProtectWrapper since
+            Payment.jsx calls /payments/create-order and /payments/verify,
+            both of which require authMiddleware.authUser on the backend. */}
+        <Route
+          path="/payment"
+          element={
+            <UserProtectWrapper>
+              <Payment />
             </UserProtectWrapper>
           }
         />

@@ -34,6 +34,16 @@ const rideSchema = new mongoose.Schema({
     distance: {
         type: Number,
     },
+    // ADDED: tracks whether the (currently cash-only) payment for a
+    // completed ride has been confirmed by the user. Kept separate from
+    // `status` because a ride can be `completed` (captain finished driving)
+    // while payment is still `pending` (user hasn't confirmed yet) — these
+    // are two independent lifecycle events.
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid'],
+        default: 'pending',
+    },
     paymentID: {
         type: String,
     },

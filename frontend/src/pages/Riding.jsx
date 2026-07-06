@@ -8,12 +8,6 @@ const Riding = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // FIX: previously this component accepted `selectedRide`/`pickup`/`destination`
-  // as props, but nothing ever rendered <Riding /> with props — App.jsx routes
-  // to it with no data at all, and Home.jsx never navigated here. The captain
-  // starting the ride (ride-started) had nowhere for the user to land. Now the
-  // ride/vehicle/pickup/destination all come from router state, passed in by
-  // Home.jsx's 'ride-started' and 'ride-ended' socket listeners.
   const {
     ride: initialRide,
     selectedRide,
@@ -65,6 +59,13 @@ const Riding = () => {
 
   const captainName = `${ride?.captain?.fullname?.firstname || ""} ${ride?.captain?.fullname?.lastname || ""}`.trim();
   const vehiclePlate = ride?.captain?.vehicle?.plate;
+
+  // ADDED: navigates to the new /payment route, carrying the full ride
+  // object (needed for fare, captain info, pickup/destination display).
+  const handleMakePayment = () => {
+    if (!rideEnded) return;
+    navigate('/payment', { state: { ride } });
+  };
 
   return (
     <div className="relative h-screen bg-slate-950 overflow-hidden flex flex-col">
@@ -131,6 +132,7 @@ const Riding = () => {
 
         <div className="pt-2">
           <button
+            onClick={handleMakePayment}
             disabled={!rideEnded}
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white cursor-pointer shadow-md transition-all ${
               rideEnded
