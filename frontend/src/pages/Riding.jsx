@@ -60,11 +60,18 @@ const Riding = () => {
   const captainName = `${ride?.captain?.fullname?.firstname || ""} ${ride?.captain?.fullname?.lastname || ""}`.trim();
   const vehiclePlate = ride?.captain?.vehicle?.plate;
 
+  const isCashRide = ride?.paymentMethod === "cash";
+  const showPaymentButton = rideEnded && !isCashRide;
+
   // ADDED: navigates to the new /payment route, carrying the full ride
   // object (needed for fare, captain info, pickup/destination display).
   const handleMakePayment = () => {
     if (!rideEnded) return;
     navigate('/payment', { state: { ride } });
+  };
+
+  const handleRideCompleted = () => {
+    navigate("/home", { replace: true });
   };
 
   return (
@@ -132,16 +139,32 @@ const Riding = () => {
 
         <div className="pt-2">
           <button
-            onClick={handleMakePayment}
-            disabled={!rideEnded}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white cursor-pointer shadow-md transition-all ${
+            onClick={
               rideEnded
-                ? "bg-black hover:bg-slate-800 active:scale-[0.99]"
+                ? isCashRide
+                  ? handleRideCompleted
+                  : handleMakePayment
+                : undefined
+            }
+            disabled={!rideEnded}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white shadow-md transition-all ${rideEnded
+                ? "bg-black hover:bg-slate-800 active:scale-[0.99] cursor-pointer"
                 : "bg-slate-300 cursor-not-allowed"
-            }`}
+              }`}
           >
-            <i className="ri-bank-card-line text-lg" />
-            {rideEnded ? "Make a Payment" : "Payment available after drop-off"}
+            <i
+              className={
+                rideEnded && isCashRide
+                  ? "ri-home-5-line text-lg"
+                  : "ri-bank-card-line text-lg"
+              }
+            />
+
+            {!rideEnded
+              ? "Payment available after drop-off"
+              : isCashRide
+                ? "Ride Completed • Go Home"
+                : "Make Payment"}
           </button>
         </div>
       </div>

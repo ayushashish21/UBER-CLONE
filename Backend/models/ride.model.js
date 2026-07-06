@@ -39,6 +39,16 @@ const rideSchema = new mongoose.Schema({
     // `status` because a ride can be `completed` (captain finished driving)
     // while payment is still `pending` (user hasn't confirmed yet) — these
     // are two independent lifecycle events.
+
+    paymentMethod: {
+
+        type: String,
+
+        enum: ["online", "cash"],
+
+        default: "online",
+
+    },
     paymentStatus: {
         type: String,
         enum: ['pending', 'paid'],
@@ -53,7 +63,7 @@ const rideSchema = new mongoose.Schema({
     signature: {
         type: String,
     },
-    otp:{
+    otp: {
         type: String,
         select: false,
         required: true,

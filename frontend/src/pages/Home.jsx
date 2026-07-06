@@ -22,6 +22,7 @@ const Home = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [selectedRide, setSelectedRide] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const [activeField, setActiveField] = useState(null);
 
   const [searchSuggestions, setSearchSuggestions] = useState([]);
@@ -230,6 +231,7 @@ const Home = () => {
           pickup: pickup.trim(),
           destination: destination.trim(),
           vehicleType: selectedRide.vehicleType,
+          paymentMethod,
         },
         { headers }
       );
@@ -286,15 +288,15 @@ const Home = () => {
               <h4 className="text-2xl font-bold text-slate-900 tracking-wide">
                 {panelType === "looking" ? "Looking for a Driver"
                   : panelType === "confirm" ? "Confirm Ride"
-                  : panelType === "accepted" ? "Driver is on the way!"
-                  : "Find a trip"}
+                    : panelType === "accepted" ? "Driver is on the way!"
+                      : "Find a trip"}
               </h4>
               <p className="mt-1 text-sm text-slate-500">
                 {panelType === "looking" ? "Searching for a nearby captain to accept your ride..."
                   : panelType === "confirm" && selectedRide ? `${selectedRide.name} - ${selectedRide.price}`
-                  : panelType === "accepted" ? `Meet ${confirmedRideData?.captain?.fullname?.firstname} at pickup location.`
-                  : pickup && destination ? "✓ Ready to choose a ride."
-                  : "Pick a ride and enter the route to begin."}
+                    : panelType === "accepted" ? `Meet ${confirmedRideData?.captain?.fullname?.firstname} at pickup location.`
+                      : pickup && destination ? "✓ Ready to choose a ride."
+                        : "Pick a ride and enter the route to begin."}
               </p>
             </div>
 
@@ -366,6 +368,8 @@ const Home = () => {
               selectedRide={selectedRide}
               pickup={pickup}
               destination={destination}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
               error={rideError}
               onChangeRide={() => {
                 setPanelType("vehicle");

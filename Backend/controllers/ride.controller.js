@@ -11,21 +11,26 @@ module.exports.createRide = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { pickup, destination, vehicleType } = req.body;
-    console.log(`[RIDE_FLOW] Step 1: Ride creation request processing started for user ${req.user._id}`);
+    const {
+        pickup,
+        destination,
+        vehicleType,
+        paymentMethod
+    } = req.body; console.log(`[RIDE_FLOW] Step 1: Ride creation request processing started for user ${req.user._id}`);
 
     try {
         const activeUser = await userModel.findById(req.user._id);
         const userCountry = activeUser?.country || 'IN';
         console.log(`[RIDE_FLOW] Step 2: User boundary configuration resolved to country: ${userCountry}`);
 
-        const ride = await rideService.createRide({ 
-            user: req.user._id, 
-            pickup, 
-            destination, 
-            vehicleType 
+        const ride = await rideService.createRide({
+            user: req.user._id,
+            pickup,
+            destination,
+            vehicleType,
+            paymentMethod
         });
-        
+
         console.log(`[RIDE_FLOW] Step 3: Core document established inside MongoDB collection with ID: ${ride._id}`);
         res.status(201).json(ride);
 

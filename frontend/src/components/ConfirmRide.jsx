@@ -1,6 +1,15 @@
 import React from "react";
 
-const ConfirmRide = ({ selectedRide, pickup, destination, onConfirm, onChangeRide, error }) => {
+const ConfirmRide = ({
+selectedRide,
+pickup,
+destination,
+paymentMethod,
+setPaymentMethod,
+onConfirm,
+onChangeRide,
+error
+}) => {
   if (!selectedRide) return null;
 
   return (
@@ -48,6 +57,110 @@ const ConfirmRide = ({ selectedRide, pickup, destination, onConfirm, onChangeRid
           </div>
         </div>
       </div>
+
+      {/* Payment Method */}
+
+<div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
+
+  <p className="mb-3 text-sm font-semibold text-slate-600 text-center">
+
+    Select Payment Method
+
+  </p>
+
+  <div className="space-y-3">
+
+    <label
+
+      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+
+        paymentMethod === "online"
+
+          ? "border-black bg-white"
+
+          : "border-slate-200 bg-white"
+
+      }`}
+
+    >
+
+      <div className="flex items-center gap-3">
+
+        <i className="ri-bank-card-line text-xl"></i>
+
+        <div>
+
+          <p className="font-semibold">Online Payment</p>
+
+          <p className="text-xs text-slate-500">
+
+            Razorpay
+
+          </p>
+
+        </div>
+
+      </div>
+
+      <input
+
+        type="radio"
+
+        checked={paymentMethod === "online"}
+
+        onChange={() => setPaymentMethod("online")}
+
+      />
+
+    </label>
+
+    <label
+
+      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+
+        paymentMethod === "cash"
+
+          ? "border-black bg-white"
+
+          : "border-slate-200 bg-white"
+
+      }`}
+
+    >
+
+      <div className="flex items-center gap-3">
+
+        <i className="ri-money-rupee-circle-line text-xl"></i>
+
+        <div>
+
+          <p className="font-semibold">Cash</p>
+
+          <p className="text-xs text-slate-500">
+
+            Pay after ride completion
+
+          </p>
+
+        </div>
+
+      </div>
+
+      <input
+
+        type="radio"
+
+        checked={paymentMethod === "cash"}
+
+        onChange={() => setPaymentMethod("cash")}
+
+      />
+
+    </label>
+
+  </div>
+
+</div>
 
       {error ? (
         <p className="text-sm text-red-600 text-center">{error}</p>

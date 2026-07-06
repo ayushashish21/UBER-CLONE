@@ -60,20 +60,20 @@ async function getFare(pickup, destination) {
     return {
         auto: Math.round(
             baseFare.auto +
-                (distanceValue / 1000) * perKmRate.auto +
-                (durationValue / 60) * perMinuteRate.auto
+            (distanceValue / 1000) * perKmRate.auto +
+            (durationValue / 60) * perMinuteRate.auto
         ),
 
         car: Math.round(
             baseFare.car +
-                (distanceValue / 1000) * perKmRate.car +
-                (durationValue / 60) * perMinuteRate.car
+            (distanceValue / 1000) * perKmRate.car +
+            (durationValue / 60) * perMinuteRate.car
         ),
 
         motorcycle: Math.round(
             baseFare.motorcycle +
-                (distanceValue / 1000) * perKmRate.motorcycle +
-                (durationValue / 60) * perMinuteRate.motorcycle
+            (distanceValue / 1000) * perKmRate.motorcycle +
+            (durationValue / 60) * perMinuteRate.motorcycle
         ),
     };
 }
@@ -104,8 +104,9 @@ module.exports.createRide = async ({
     pickup,
     destination,
     vehicleType,
+    paymentMethod,
 }) => {
-    if (!user || !pickup || !destination || !vehicleType) {
+    if (!user || !pickup || !destination || !vehicleType || !paymentMethod) {
         throw new Error("All fields are required.");
     }
 
@@ -125,6 +126,7 @@ module.exports.createRide = async ({
         pickup,
         destination,
         fare: fare[vehicleType],
+        paymentMethod,
         otp: getOtp(6),
         status: "pending",
     });
@@ -249,6 +251,12 @@ module.exports.endRide = async ({
     }
 
     ride.status = "completed";
+
+    if (ride.paymentMethod === "cash") {
+
+        ride.paymentStatus = "paid";
+
+    }
 
     await ride.save();
 

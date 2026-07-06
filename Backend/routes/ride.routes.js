@@ -9,11 +9,12 @@ router.post('/create',
     body('pickup').isString().isLength({ min: 3 }).withMessage('Invalid pickup address'),
     body('destination').isString().isLength({ min: 3 }).withMessage('Invalid destination address'),
     body('vehicleType').isString().isIn(['motorcycle', 'auto', 'car']).withMessage('Invalid vehicle type'),
-    rideController.createRide
+    rideController.createRide,
+    body('paymentMethod').isIn(['online', 'cash']).withMessage('Invalid payment method'),
 );
 
-router.get('/get-fare', 
-    authMiddleware.authUser, 
+router.get('/get-fare',
+    authMiddleware.authUser,
     query('pickup').isString().isLength({ min: 3 }).withMessage('Invalid pickup address'),
     query('destination').isString().isLength({ min: 3 }).withMessage('Invalid destination address'),
     rideController.getFare
