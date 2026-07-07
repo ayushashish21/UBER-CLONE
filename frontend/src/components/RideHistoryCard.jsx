@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "remixicon/fonts/remixicon.css";
 
 const RideHistoryCard = ({ ride }) => {
     const [expanded, setExpanded] = useState(false);
+    const navigate = useNavigate();
 
     const vehicleName = {
         car: "UberGo",
@@ -58,12 +60,16 @@ const RideHistoryCard = ({ ride }) => {
         </div>
     );
 
+    const handleCardClick = () => {
+        navigate(`/rides/${ride._id}`);
+    };
+
     return (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             {/* CLICKABLE HEADER */}
 
             <div
-                onClick={() => setExpanded(!expanded)}
+                onClick={handleCardClick}
                 className="cursor-pointer p-5"
             >
                 <div className="flex items-center justify-between">
@@ -281,8 +287,11 @@ const RideHistoryCard = ({ ride }) => {
                         {/* Footer */}
 
                         <button
-                            onClick={() => setExpanded(false)}
-className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 transition-all duration-300 font-semibold flex items-center justify-center gap-2"                        >
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setExpanded(false);
+                            }}
+                            className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 transition-all duration-300 font-semibold flex items-center justify-center gap-2"                        >
                             <i className="ri-eye-off-line" />
                             Hide Details
                         </button>
@@ -294,8 +303,11 @@ className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 tr
 
             {!expanded && (
                 <button
-                    onClick={() => setExpanded(true)}
-className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 transition-all duration-300 font-semibold flex items-center justify-center gap-2"                >
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setExpanded(true);
+                    }}
+                    className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 transition-all duration-300 font-semibold flex items-center justify-center gap-2"                >
                     <i className="ri-eye-line" />
                     View Details
                 </button>

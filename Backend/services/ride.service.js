@@ -8,35 +8,36 @@ const crypto = require("crypto");
 CALCULATE FARE
 =========================================
 */
-async function getFare(pickup, destination) {
+async function getFare(pickup, destination, userCountry) {
     if (!pickup || !destination) {
         throw new Error("Pickup and destination are required");
     }
 
     const distanceTime = await mapService.getDistanceTime(
         pickup,
-        destination
+        destination,
+        userCountry
     );
 
     if (
         !distanceTime ||
         (!distanceTime.distance && !distanceTime.duration)
     ) {
-        throw new Error("Could not fetch distance/time from Mapbox.");
+        throw new Error("Could not fetch distance/time.");
     }
 
-    const distanceValue =
+    const distance =
         distanceTime.distance.value !== undefined
             ? distanceTime.distance.value
             : distanceTime.distance;
 
-    const durationValue =
+    const duration =
         distanceTime.duration.value !== undefined
             ? distanceTime.duration.value
             : distanceTime.duration;
 
-    if (isNaN(distanceValue) || isNaN(durationValue)) {
-        throw new Error("Invalid distance or duration received.");
+    if (isNaN(distance) || isNaN(duration)) {
+        throw new Error("Invalid distance or duration.");
     }
 
     const baseFare = {
@@ -58,23 +59,28 @@ async function getFare(pickup, destination) {
     };
 
     return {
-        auto: Math.round(
-            baseFare.auto +
-            (distanceValue / 1000) * perKmRate.auto +
-            (durationValue / 60) * perMinuteRate.auto
-        ),
+        fare: {
+            auto: Math.round(
+                baseFare.auto +
+                (distance / 1000) * perKmRate.auto +
+                (duration / 60) * perMinuteRate.auto
+            ),
 
-        car: Math.round(
-            baseFare.car +
-            (distanceValue / 1000) * perKmRate.car +
-            (durationValue / 60) * perMinuteRate.car
-        ),
+            car: Math.round(
+                baseFare.car +
+                (distance / 1000) * perKmRate.car +
+                (duration / 60) * perMinuteRate.car
+            ),
 
-        motorcycle: Math.round(
-            baseFare.motorcycle +
-            (distanceValue / 1000) * perKmRate.motorcycle +
-            (durationValue / 60) * perMinuteRate.motorcycle
-        ),
+            motorcycle: Math.round(
+                baseFare.motorcycle +
+                (distance / 1000) * perKmRate.motorcycle +
+                (duration / 60) * perMinuteRate.motorcycle
+            ),
+        },
+
+        distance,
+        duration,
     };
 }
 
@@ -105,36 +111,58 @@ module.exports.createRide = async ({
     destination,
     vehicleType,
     paymentMethod,
+    userCountry
 }) => {
 
     if (!user || !pickup || !destination || !vehicleType || !paymentMethod) {
         throw new Error("All fields are required.");
     }
 
-    const fare = await getFare(pickup, destination);
+    const fareResult = await getFare(
+        pickup,
+        destination,
+        userCountry
+    );
 
     if (
-        fare[vehicleType] === undefined ||
-        isNaN(fare[vehicleType])
+        fareResult.fare[vehicleType] === undefined ||
+        isNaN(fareResult.fare[vehicleType])
     ) {
-        throw new Error(`Invalid fare for vehicle type: ${vehicleType}`);
+        throw new Error(
+            `Invalid fare for vehicle type: ${vehicleType}`
+        );
     }
 
     const ride = await rideModel.create({
+
         user,
+
         pickup,
+
         destination,
+
         vehicleType,
-        fare: fare[vehicleType],
+
+        fare: fareResult.fare[vehicleType],
+
+        distance: fareResult.distance,
+
+        duration: fareResult.duration,
+
         paymentMethod,
+
         otp: getOtp(6),
+
         status: "pending",
 
-        // timeline
         acceptedAt: null,
+
         startedAt: null,
+
         completedAt: null,
+
         paidAt: null,
+
     });
 
     return ride;
@@ -189,46 +217,6 @@ START RIDE
 module.exports.startRide = async ({
     rideId,
     captain,
-}) => {
-    if (!rideId || !captain) {
-        throw new Error("Ride ID and Captain are required.");
-    }
-
-    const ride = await rideModel
-        .findOneAndUpdate(
-            {
-                _id: rideId,
-                captain: captain._id,
-                status: "accepted",
-            },
-            {
-                status: "ongoing",
-                startedAt: new Date()
-            },
-            {
-                returnDocument: "after",
-            }
-        )
-        .populate("user")
-        .populate("captain");
-
-    if (!ride) {
-        throw new Error(
-            "Ride not found or not accepted by this captain."
-        );
-    }
-
-    return ride;
-};
-
-/*
-=========================================
-END RIDE
-=========================================
-*/
-module.exports.endRide = async ({
-    rideId,
-    captain,
     otp,
 }) => {
 
@@ -240,7 +228,7 @@ module.exports.endRide = async ({
         .findOne({
             _id: rideId,
             captain: captain._id,
-            status: "ongoing",
+            status: "accepted",
         })
         .select("+otp")
         .populate("user")
@@ -253,6 +241,44 @@ module.exports.endRide = async ({
     if (String(ride.otp).trim() !== String(otp).trim()) {
         throw new Error("Invalid OTP.");
     }
+
+    ride.status = "ongoing";
+    ride.startedAt = new Date();
+
+    await ride.save();
+
+    return ride;
+};
+
+/*
+=========================================
+END RIDE
+=========================================
+*/
+module.exports.endRide = async ({
+    rideId,
+    captain,
+    
+}) => {
+
+    if (!rideId || !captain ) {
+        throw new Error("Ride ID, Captain are required.");
+    }
+
+    const ride = await rideModel
+        .findOne({
+            _id: rideId,
+            captain: captain._id,
+            status: "ongoing",
+        })
+        .populate("user")
+        .populate("captain");
+
+    if (!ride) {
+        throw new Error("Ride not found.");
+    }
+
+    
 
     ride.status = "completed";
     ride.completedAt = new Date();
@@ -372,4 +398,37 @@ module.exports.getCaptainsInTheRadius = async (
     });
 
     return captains;
+};
+
+/*
+=========================================
+GET SINGLE RIDE
+=========================================
+*/
+module.exports.getRideById = async ({ rideId, userId }) => {
+
+    if (!rideId) {
+        throw new Error("Ride ID is required.");
+    }
+
+    const ride = await rideModel
+        .findOne({
+            _id: rideId,
+            user: userId
+        })
+        .populate({
+            path: "captain",
+            select: "fullname vehicle"
+        })
+        .populate({
+            path: "user",
+            select: "fullname email"
+        });
+
+    if (!ride) {
+        throw new Error("Ride not found.");
+    }
+
+    return ride;
+
 };

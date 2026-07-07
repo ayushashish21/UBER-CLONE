@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 const FinishRide = ({ finishRidePanelOpen, setFinishRidePanelOpen, ride }) => {
   const panelRef = useRef(null);
   const navigate = useNavigate();
-  const [otp, setOtp] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -23,7 +22,6 @@ const FinishRide = ({ finishRidePanelOpen, setFinishRidePanelOpen, ride }) => {
         duration: 0.4,
         ease: "power3.in"
       });
-      setOtp("");
       setErrorMessage("");
     }
   }, [finishRidePanelOpen]);
@@ -31,41 +29,45 @@ const FinishRide = ({ finishRidePanelOpen, setFinishRidePanelOpen, ride }) => {
   const handleFinishRide = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (otp.length !== 6) {
-        setErrorMessage("Please enter a valid 6-digit OTP.");
-        return;
-    }
 
     try {
-        const token = localStorage.getItem("token");
-        const response = await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/rides/end`,
-            { rideId: ride._id, otp: otp },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const token = localStorage.getItem("token");
 
-        if (response.status === 200) {
-            navigate("/captain-home");
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/end`,
+        {
+          rideId: ride._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
+
+      if (response.status === 200) {
+        navigate("/captain-home");
+      }
     } catch (error) {
-        setErrorMessage(error.response?.data?.error || "Invalid OTP or request failed.");
+      setErrorMessage(
+        error.response?.data?.error || "Unable to complete ride."
+      );
     }
   };
 
   return (
-    <div 
+    <div
       ref={panelRef}
       onClick={(e) => e.stopPropagation()}
       className="absolute inset-x-0 bottom-0 bg-white p-6 z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.22)] rounded-t-[2rem] border-t border-slate-200 translate-y-full"
     >
-      <div 
+      <div
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setFinishRidePanelOpen(false);
         }}
-        className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-5 cursor-pointer" 
+        className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-5 cursor-pointer"
       />
 
       <div className="flex items-center justify-between mb-5">
@@ -75,51 +77,53 @@ const FinishRide = ({ finishRidePanelOpen, setFinishRidePanelOpen, ride }) => {
       <div className="space-y-4 mb-6">
         <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
           <div className="h-12 w-12 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
-             <img className="h-full w-full object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Passenger Profile" />
+            <img className="h-full w-full object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Passenger Profile" />
           </div>
           <div>
             <h4 className="text-base font-bold text-slate-900 capitalize leading-tight">
-                {ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}
+              {ride?.user?.fullname?.firstname} {ride?.user?.fullname?.lastname}
             </h4>
             <p className="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">UberGo Passenger</p>
           </div>
         </div>
-        
+
         <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
           <div className="flex items-start gap-4 mb-4">
-             <div className="mt-1 flex flex-col items-center">
-               <i className="ri-map-pin-2-fill text-xl text-red-500" />
-             </div>
-             <div>
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Drop-off Reached</p>
-               <h5 className="text-sm font-semibold text-slate-800">{ride?.destination || "Destination"}</h5>
-             </div>
+            <div className="mt-1 flex flex-col items-center">
+              <i className="ri-map-pin-2-fill text-xl text-red-500" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Drop-off Reached</p>
+              <h5 className="text-sm font-semibold text-slate-800">{ride?.destination || "Destination"}</h5>
+            </div>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Fare Collection</p>
-              <p className="text-xl font-black text-emerald-600 mt-0.5">₹{ride?.fare || "0"}</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Payment
+              </p>
+
+              <p className="text-sm font-semibold capitalize">
+                {ride?.paymentMethod}
+              </p>
             </div>
+
+            <div className="text-right">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Fare
+              </p>
+
+              <p className="text-2xl font-black text-emerald-600">
+                ₹{ride?.fare}
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
 
-      {/* OTP Field Area */}
-      <div className="mb-4">
-        <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide text-center">Ask Passenger for completion PIN</p>
-        <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-black focus-within:border-black transition-all duration-200 text-left">
-          <i className="ri-lock-password-fill absolute left-4 top-1/2 -translate-y-1/2 text-base text-slate-400" />
-          <input
-            type="text"
-            pattern="[0-9]*"
-            maxLength="6"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-            className="w-full bg-transparent pl-7 font-mono text-base font-bold tracking-[0.2em] text-slate-900 outline-none placeholder:font-sans placeholder:tracking-normal placeholder:text-xs placeholder:text-slate-400"
-            placeholder="Enter 6-digit OTP"
-          />
-        </div>
-      </div>
+
 
       {errorMessage && (
         <p className="text-red-500 text-sm font-semibold text-center mb-3">{errorMessage}</p>
@@ -127,14 +131,14 @@ const FinishRide = ({ finishRidePanelOpen, setFinishRidePanelOpen, ride }) => {
 
       {/* Action Controls */}
       <div className="flex flex-col gap-2.5 pt-2">
-        <button 
+        <button
           onClick={handleFinishRide}
           className="w-full py-4 rounded-xl bg-black text-white font-bold text-sm hover:bg-slate-800 active:scale-[0.99] transition-all cursor-pointer shadow-md text-center"
         >
-          Confirm OTP & Finish Ride
+          Finish Ride
         </button>
-        
-        <button 
+
+        <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

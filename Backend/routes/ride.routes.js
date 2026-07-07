@@ -29,17 +29,28 @@ router.post('/confirm',
 );
 
 // Captain starts the ride (OTP is NO LONGER required here)
-router.post('/start',
+router.post(
+    "/start",
     authMiddleware.authCaptain,
-    body('rideId').isMongoId().withMessage('Invalid ride ID'),
+
+    body("rideId")
+        .isMongoId()
+        .withMessage("Invalid ride id"),
+
+    body("otp")
+        .isLength({ min: 6, max: 6 })
+        .withMessage("OTP must be 6 digits"),
+
     rideController.startRide
 );
 
 // Captain completes the ride (OTP IS REQUIRED here now)
-router.post('/end',
+router.post(
+    "/end",
     authMiddleware.authCaptain,
-    body('rideId').isMongoId().withMessage('Invalid ride ID'),
-    body('otp').isString().isLength({ min: 6, max: 6 }).withMessage('Invalid OTP. Must be 6 digits.'),
+    body("rideId")
+        .isMongoId()
+        .withMessage("Invalid ride ID"),
     rideController.endRide
 );
 
@@ -47,6 +58,12 @@ router.get(
     "/history",
     authMiddleware.authUser,
     rideController.getRideHistory
+);
+
+router.get(
+    "/:rideId",
+    authMiddleware.authUser,
+    rideController.getRideById
 );
 
 module.exports = router;

@@ -15,6 +15,7 @@ const ConfirmRidePopup = ({
 
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState("");
 
   useEffect(() => {
     if (confirmRidePopupOpen) {
@@ -32,6 +33,7 @@ const ConfirmRidePopup = ({
 
       setErrorMessage("");
       setLoading(false);
+      setOtp("");
     }
   }, [confirmRidePopupOpen]);
 
@@ -48,6 +50,11 @@ const ConfirmRidePopup = ({
   const handleStartRide = async () => {
     if (!ride?._id || loading) return;
 
+    if (!otp.trim()) {
+      setErrorMessage("Please enter the ride OTP.");
+      return;
+    }
+
     try {
       setLoading(true);
       setErrorMessage("");
@@ -58,6 +65,7 @@ const ConfirmRidePopup = ({
         `${import.meta.env.VITE_BASE_URL}/rides/start`,
         {
           rideId: ride._id,
+          otp,
         },
         {
           headers: {
@@ -66,18 +74,14 @@ const ConfirmRidePopup = ({
         }
       );
 
-      if (response.status === 200) {
-        navigate("/captain-riding", {
-          state: {
-            ride: response.data,
-          },
-        });
-      }
+      navigate("/captain-riding", {
+        state: {
+          ride: response.data,
+        },
+      });
     } catch (error) {
-      console.error(error);
-
       setErrorMessage(
-        error.response?.data?.error || "Failed to start ride."
+        error.response?.data?.error || "Invalid OTP."
       );
     } finally {
       setLoading(false);
@@ -87,139 +91,156 @@ const ConfirmRidePopup = ({
   return (
     <div
       ref={fullScreenRef}
-      className="absolute inset-0 h-screen w-full bg-slate-900 z-50 translate-y-full flex flex-col justify-end"
+      className="absolute inset-0 z-50 flex h-screen w-full translate-y-full flex-col justify-end bg-slate-900"
     >
-      <div className="bg-white h-[90vh] w-full rounded-t-[2rem] px-5 py-6 flex flex-col shadow-[0_-15px_40px_rgba(0,0,0,0.2)]">
+      <div className="h-[92vh] w-full rounded-t-[2.5rem] bg-white px-5 py-6 shadow-[0_-15px_40px_rgba(0,0,0,0.2)]">
 
-        <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-          <h5 className="text-xl font-black text-slate-900">
+        {/* Header */}
+
+        <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-5">
+          <h2 className="text-3xl font-black text-slate-900">
             Trip Details
-          </h5>
+          </h2>
 
           <button
             onClick={handleCancel}
             disabled={loading}
-            className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
           >
-            <i className="ri-close-line text-xl" />
+            <i className="ri-close-line text-3xl"></i>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto mb-6">
+        {/* Passenger */}
 
-          <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm mb-6">
-
-            <div className="h-14 w-14 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md">
-
+        <div className="mb-5 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-white shadow">
               <img
-                className="h-full w-full object-cover"
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
                 alt="Passenger"
+                className="h-full w-full object-cover"
               />
-
             </div>
 
             <div>
-
-              <h4 className="text-lg font-bold capitalize">
+              <h3 className="text-2xl font-bold capitalize">
                 {ride?.user?.fullname?.firstname}{" "}
                 {ride?.user?.fullname?.lastname}
-              </h4>
+              </h3>
 
-              <p className="text-xs font-semibold text-emerald-600">
+              <p className="text-lg font-semibold text-emerald-600">
                 User
               </p>
+            </div>
+          </div>
+        </div>
 
+        {/* Ride Details */}
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+
+          <div className="flex gap-4">
+
+            <div className="flex flex-col items-center">
+              <i className="ri-map-pin-user-fill text-3xl text-blue-500"></i>
+              <div className="my-2 h-14 w-[2px] bg-slate-200"></div>
+              <i className="ri-map-pin-2-fill text-3xl text-red-500"></i>
             </div>
 
-          </div>
-
-          <div className="space-y-5 rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
-
-            <div className="flex items-start gap-4">
-
-              <div className="mt-1 flex flex-col items-center">
-
-                <i className="ri-map-pin-user-fill text-xl text-blue-500" />
-
-                <div className="h-8 w-0.5 bg-slate-200 my-1 rounded-full" />
-
-              </div>
+            <div className="flex-1">
 
               <div>
-
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
                   Pickup Location
                 </p>
 
-                <h5 className="text-sm font-semibold">
-                  {ride?.pickup || "Fetching..."}
-                </h5>
-
+                <h4 className="mt-1 text-xl font-bold">
+                  {ride?.pickup}
+                </h4>
               </div>
 
-            </div>
-
-            <div className="flex items-start gap-4">
-
-              <div className="mt-1">
-
-                <i className="ri-map-pin-2-fill text-xl text-red-500" />
-
-              </div>
+              <div className="my-5 border-b border-slate-200"></div>
 
               <div>
-
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Drop-off Destination
+                <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
+                  Drop-off Location
                 </p>
 
-                <h5 className="text-sm font-semibold">
-                  {ride?.destination || "Fetching..."}
-                </h5>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-start gap-4 pt-4 border-t border-slate-100">
-
-              <div className="mt-1">
-
-                <i className="ri-bank-card-fill text-xl text-emerald-500" />
-
-              </div>
-
-              <div>
-
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Payment Method • Cash
-                </p>
-
-                <h5 className="text-xl font-black">
-                  ₹{ride?.fare || 0}
-                </h5>
-
+                <h4 className="mt-1 text-xl font-bold">
+                  {ride?.destination}
+                </h4>
               </div>
 
             </div>
 
           </div>
+
+          <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-5">
+
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
+                Payment Method
+              </p>
+
+              <h4 className="text-xl font-bold capitalize">
+                {ride?.paymentMethod}
+              </h4>
+            </div>
+
+            <div className="text-right">
+              <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
+                Fare
+              </p>
+
+              <h3 className="text-4xl font-black text-emerald-600">
+                ₹{ride?.fare}
+              </h3>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* OTP Card */}
+
+        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+          <p className="mb-4 text-xl font-medium text-slate-500">
+            Ride OTP
+          </p>
+
+          <input
+            type="text"
+            maxLength={6}
+            value={otp}
+            onChange={(e) =>
+              setOtp(e.target.value.replace(/\D/g, ""))
+            }
+            placeholder="Enter 6 digit OTP"
+            className="h-16 w-full rounded-2xl border border-slate-300 px-6 text-center text-2xl font-bold tracking-[0.35em] outline-none transition focus:border-black"
+          />
+
+          <p className="mt-5 text-lg leading-7 text-slate-500">
+            Ask the passenger for the OTP before starting the ride.
+          </p>
 
         </div>
 
         {errorMessage && (
-          <p className="text-red-500 text-center text-sm font-semibold mb-3">
+          <p className="mt-3 text-center font-semibold text-red-500">
             {errorMessage}
           </p>
         )}
 
-        <div className="flex gap-3">
+        {/* Buttons */}
+
+        <div className="mt-6 flex gap-4">
 
           <button
             onClick={handleCancel}
             disabled={loading}
-            className="flex-1 py-3.5 rounded-2xl bg-slate-100 font-bold"
+            className="h-16 flex-1 rounded-3xl bg-slate-100 text-xl font-bold"
           >
             Cancel
           </button>
@@ -227,9 +248,11 @@ const ConfirmRidePopup = ({
           <button
             onClick={handleStartRide}
             disabled={loading}
-            className="flex-1 py-3.5 rounded-2xl bg-black text-white font-bold"
+            className="h-16 flex-1 rounded-3xl bg-black text-xl font-bold text-white"
           >
-            {loading ? "Starting Ride..." : "Start Ride"}
+            {loading
+              ? "Verifying..."
+              : "Verify OTP & Start Ride"}
           </button>
 
         </div>
