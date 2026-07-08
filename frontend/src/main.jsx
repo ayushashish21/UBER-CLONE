@@ -1,21 +1,21 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import 'remixicon/fonts/remixicon.css'
-import App from './App.jsx'
-import { BrowserRouter } from 'react-router-dom';
-import UserContext from './context/UserContext.jsx';
-import CaptainContext from './context/CaptainContext.jsx';
-import SocketProvider from './context/SocketContext.jsx'; // Changed to SocketProvider!
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import "remixicon/fonts/remixicon.css";
+import App from "./App.jsx";
+import { BrowserRouter } from "react-router-dom";
+import UserContext from "./context/UserContext.jsx";
+import CaptainContext from "./context/CaptainContext.jsx";
+import SocketProvider from "./context/SocketContext.jsx"; // Changed to SocketProvider!
 
 createRoot(document.getElementById("root")).render(
   <SocketProvider>
     <CaptainContext>
       <UserContext>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <App />
         </BrowserRouter>
       </UserContext>
     </CaptainContext>
-  </SocketProvider>
+  </SocketProvider>,
 );
