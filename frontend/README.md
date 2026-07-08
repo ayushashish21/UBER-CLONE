@@ -1,93 +1,154 @@
-# 🚖 Uber Clone (MERN Stack)
+# 🚖 Uber Clone
 
-<p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png" width="250" alt="Uber Logo">
-</p>
-
-<p align="center">
-
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-Real_Time-black?logo=socketdotio)
-![Mapbox](https://img.shields.io/badge/Mapbox-Maps-blue?logo=mapbox)
-![JWT](https://img.shields.io/badge/JWT-Authentication-red)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--Time-010101?logo=socketdotio)
+![Razorpay](https://img.shields.io/badge/Razorpay-Payment-0C6CF2)
+![Mapbox](https://img.shields.io/badge/Mapbox-Maps-000000?logo=mapbox)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-</p>
+A modern **full-stack Uber Clone** built with the **MERN Stack**, featuring **real-time ride booking**, **live captain updates**, **OTP-based ride completion**, **online payments with Razorpay**, **Mapbox integration**, **ride history**, and a responsive user experience.
 
 ---
 
-# 📖 About
+# 🌐 Live Demo
 
-Uber Clone is a full-stack ride booking application inspired by Uber.
+**Frontend**
 
-The project is built using the **MERN Stack** and provides a complete real-time ride booking experience between Riders and Captains (Drivers).
+https://ayushashish21.github.io/UBER-CLONE/
 
-It includes authentication, live GPS tracking, Socket.IO communication, Mapbox integration, OTP verification, ride lifecycle management, and a modern responsive UI.
-
-> 🚧 **Current Status:** Core Ride Flow Completed. Razorpay Payment Integration is the next milestone.
+> **Note**
+>
+> GitHub Pages hosts only the frontend.
+> The backend should be deployed separately (Render, Railway, VPS, etc.) for full functionality.
 
 ---
 
 # ✨ Features
 
-## 👤 Rider
+## 👤 User
 
-- Register & Login
+- User Registration & Login
 - JWT Authentication
 - Protected Routes
 - Search Pickup & Destination
-- Mapbox Address Suggestions
-- Fare Calculation
-- Select Vehicle
+- Mapbox Autocomplete
+- Dynamic Fare Calculation
 - Book Ride
-- Wait for Driver
-- Live Ride Status
-- View Captain Details
-- OTP Ride Verification
-- Ride Completion Notification
+- Real-Time Captain Assignment
+- Live Ride Status Updates
+- Razorpay Payment Integration
+- OTP Verification
+- Ride History
+- Ride Details Page
+- Responsive UI
 
 ---
 
 ## 🚖 Captain
 
-- Register & Login
-- JWT Authentication
-- Protected Routes
-- Live GPS Tracking
+- Captain Registration & Login
+- Protected Dashboard
 - Receive Ride Requests
-- Accept Ride
-- Start Ride
-- Complete Ride
-- OTP Verification
-- Real-Time Updates
-
----
-
-## 🌍 Maps
-
-- Mapbox Geocoding API
-- Mapbox Directions API
-- Address Autocomplete
-- Live GPS
-- Dynamic Fare Calculation
+- Accept / Reject Ride
+- Real-Time Ride Updates
+- Ride Completion via OTP
+- View Ride Details
+- Live Ride Workflow
 
 ---
 
 ## ⚡ Real-Time Features
 
-Implemented using Socket.IO
+Powered by **Socket.IO**
 
-- Live Socket Connection
-- User Join
-- Captain Join
-- Live Captain GPS
-- New Ride Broadcast
-- Ride Confirmation
-- Ride Start
-- Ride Completion
-- Instant UI Updates
+- Instant Ride Requests
+- Live Captain Assignment
+- Ride Status Synchronization
+- Ride Acceptance Updates
+- OTP Verification Events
+- Ride Completion Events
+
+---
+
+## 💳 Payment System
+
+Integrated using **Razorpay**
+
+- Secure Order Creation
+- Razorpay Checkout
+- Payment Verification
+- Backend Validation
+- Payment Status Tracking
+- Ride Completion after Successful Payment
+
+---
+
+## 📜 Ride History
+
+Users can
+
+- View Previous Rides
+- Check Ride Status
+- View Fare Details
+- Open Ride Details
+- View Payment Status
+- Access Completed Trips
+
+---
+
+## 🚖 Ride Details
+
+Each ride displays
+
+- Pickup Location
+- Destination
+- Captain Information
+- Vehicle Information
+- Fare Breakdown
+- Payment Status
+- Ride Timeline
+- Ride Status
+
+---
+
+# 🚦 Ride Lifecycle
+
+```
+User Login
+      │
+      ▼
+Book Ride
+      │
+      ▼
+Fare Estimation
+      │
+      ▼
+Nearby Captain Receives Request
+      │
+      ▼
+Captain Accepts Ride
+      │
+      ▼
+User Receives Captain Details
+      │
+      ▼
+Ride Starts
+      │
+      ▼
+Online Payment
+      │
+      ▼
+OTP Verification
+      │
+      ▼
+Ride Completed
+      │
+      ▼
+Ride Saved in History
+```
 
 ---
 
@@ -97,12 +158,13 @@ Implemented using Socket.IO
 
 - React
 - Vite
-- React Router
+- React Router DOM
+- Tailwind CSS
 - Axios
 - GSAP
-- Socket.IO Client
-- Tailwind CSS
+- Mapbox GL JS
 - Remix Icons
+- Socket.IO Client
 
 ---
 
@@ -113,133 +175,66 @@ Implemented using Socket.IO
 - MongoDB
 - Mongoose
 - JWT
-- Bcrypt
+- bcrypt
 - Socket.IO
-- Express Validator
-- Dotenv
+- Razorpay
 
 ---
 
-## APIs
+## Database
 
-- Mapbox Geocoding API
-- Mapbox Directions API
+- MongoDB Atlas
 
 ---
 
-# 📂 Folder Structure
+# 📂 Project Structure
 
 ```
-Uber Clone
+UBER-CLONE
 │
 ├── Backend
+│   ├── config
 │   ├── controllers
-│   ├── middlewares
+│   ├── middleware
 │   ├── models
 │   ├── routes
 │   ├── services
-│   ├── socket.js
+│   ├── sockets
+│   ├── utils
 │   ├── app.js
 │   └── server.js
 │
-├── Frontend
+├── frontend
+│   ├── public
+│   ├── src
+│   │
+│   ├── assets
 │   ├── components
 │   ├── context
 │   ├── pages
-│   ├── assets
-│   └── App.jsx
+│   ├── App.jsx
+│   └── main.jsx
 │
+├── .gitignore
+├── package.json
 └── README.md
 ```
 
 ---
 
-# 🔐 Authentication
-
-Both Riders and Captains use
-
-- JWT Authentication
-- Protected Routes
-- Bcrypt Password Hashing
-
----
-
-# 🚖 Ride Workflow
-
-```
-User Login
-      │
-      ▼
-Enter Pickup
-      │
-      ▼
-Enter Destination
-      │
-      ▼
-Calculate Fare
-      │
-      ▼
-Choose Vehicle
-      │
-      ▼
-Create Ride
-      │
-      ▼
-Nearby Captains Receive Ride
-      │
-      ▼
-Captain Accepts Ride
-      │
-      ▼
-User Gets Confirmation
-      │
-      ▼
-Captain Starts Ride
-      │
-      ▼
-Ride In Progress
-      │
-      ▼
-OTP Verification
-      │
-      ▼
-Ride Completed
-```
-
----
-
-# 📡 Socket Events
-
-### Client → Server
-
-```
-join
-updateLocationCaptain
-```
-
-### Server → Client
-
-```
-new-ride
-ride-confirmed
-ride-started
-ride-ended
-captain-location-update
-```
-
----
-
-# 📦 Installation
+# 🚀 Installation
 
 ## Clone Repository
 
 ```bash
-git clone https://github.com/ayushashish21/uber-clone.git
+git clone https://github.com/ayushashish21/UBER-CLONE.git
+
+cd UBER-CLONE
 ```
 
 ---
 
-## Backend
+# Backend Setup
 
 ```bash
 cd Backend
@@ -247,158 +242,246 @@ cd Backend
 npm install
 ```
 
-Run
+Create `.env`
+
+```env
+PORT=5000
+
+MONGODB_URI=your_mongodb_connection_string
+
+JWT_SECRET=your_secret
+
+MAPBOX_ACCESS_TOKEN=your_mapbox_token
+
+RAZORPAY_KEY_ID=your_key
+
+RAZORPAY_KEY_SECRET=your_secret
+```
+
+Run Backend
 
 ```bash
 npm run dev
 ```
 
-or
-
-```bash
-npx nodemon
-```
-
 ---
 
-## Frontend
+# Frontend Setup
 
 ```bash
-cd Frontend
+cd frontend
 
 npm install
+```
 
+Create `.env`
+
+```env
+VITE_BASE_URL=http://localhost:5000
+
+VITE_MAPBOX_ACCESS_TOKEN=your_public_mapbox_token
+
+VITE_RAZORPAY_KEY=your_public_key
+```
+
+Run Frontend
+
+```bash
 npm run dev
 ```
 
 ---
 
-# 🔑 Environment Variables
+# Production Build
 
-## Backend (.env)
+```bash
+npm run build
+```
 
-```env
-PORT=4000
+Preview Production Build
 
-MONGODB_URI=YOUR_MONGODB_URI
-
-JWT_SECRET=YOUR_SECRET
-
-MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN
-
-RAZORPAY_KEY_ID=YOUR_RAZORPAY_KEY
-
-RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_SECRET
+```bash
+npm run preview
 ```
 
 ---
 
-## Frontend (.env)
+# 🔗 REST API Modules
 
-```env
-VITE_BASE_URL=http://localhost:4000/api
-
-VITE_MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN
-
-VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_KEY
-```
-
----
-
-# ✅ Completed Features
+Backend APIs include
 
 - User Authentication
 - Captain Authentication
-- Protected Routes
-- JWT Authorization
-- MongoDB Integration
-- Socket Context
-- Live Socket Connection
-- Ride Creation
-- Fare Calculation
-- Nearby Captain Search
-- Ride Acceptance
-- Ride Confirmation
-- Ride Start
-- OTP Verification
-- Ride Completion
-- MongoDB Ride Synchronization
-- Live Captain GPS Tracking
-- Mapbox Integration
-- Modern Responsive UI
-
----
-
-# 🚧 Currently Working On
-
-- Razorpay Payment Integration
-
----
-
-# 🗺 Future Roadmap
-
-- Live Route Navigation
-- Captain Marker Movement
+- Ride Booking
+- Fare Estimation
+- Ride Management
 - Ride History
-- Captain Earnings
+- Payment
+- OTP Verification
+- Maps & Geolocation
+
+---
+
+# 🔒 Security
+
+- JWT Authentication
+- Password Hashing using bcrypt
+- Protected Routes
+- Secure Payment Verification
+- Environment Variables
+- Backend Authorization Middleware
+
+---
+
+# 🗺 Maps
+
+Powered by **Mapbox**
+
+Features
+
+- Address Autocomplete
+- Pickup Suggestions
+- Destination Suggestions
+- Route Information
+- Distance Calculation
+- Fare Estimation
+
+---
+
+# 📱 Responsive Design
+
+The application is optimized for
+
+- Desktop
+- Laptop
+- Tablet
+- Mobile Devices
+
+---
+
+# 🚀 Deployment
+
+### Frontend
+
+- GitHub Pages
+
+### Backend
+
+Deployable on
+
+- Render
+- Railway
+- VPS
+- AWS
+- DigitalOcean
+
+### Database
+
+- MongoDB Atlas
+
+---
+
+# 📸 Screenshots
+
+## Landing Page
+
+_Add Screenshot_
+
+---
+
+## User Dashboard
+
+_Add Screenshot_
+
+---
+
+## Captain Dashboard
+
+_Add Screenshot_
+
+---
+
+## Ride Booking
+
+_Add Screenshot_
+
+---
+
+## Payment
+
+_Add Screenshot_
+
+---
+
+## Ride History
+
+_Add Screenshot_
+
+---
+
+## Ride Details
+
+_Add Screenshot_
+
+---
+
+# 🔮 Future Improvements
+
+- Live Driver Tracking
 - Ratings & Reviews
-- Online / Offline Status
-- Ride Cancellation
-- Ride Timestamps
-- Payment History
 - Push Notifications
+- Scheduled Rides
+- Multiple Payment Methods
+- Driver Earnings Dashboard
 - Admin Dashboard
-- Booking Scheduler
+- Promo Codes
+- Dark Mode
+- Ride Cancellation Charges
 
 ---
 
-# 📸 Screens
+# 💡 Skills Demonstrated
 
-- Login
-- Register
-- Home
-- Vehicle Selection
-- Confirm Ride
-- Looking For Driver
-- Waiting For Driver
-- Captain Dashboard
-- Ride Popup
-- Riding Screen
-
-(Add screenshots here after deployment.)
+- MERN Stack Development
+- REST API Design
+- Authentication & Authorization
+- JWT Security
+- Socket.IO Real-Time Communication
+- Razorpay Payment Gateway
+- Mapbox Integration
+- MongoDB Database Design
+- React Context API
+- Responsive UI Development
+- Component-Based Architecture
+- State Management
+- Git & GitHub
+- Deployment
+- Environment Variable Management
 
 ---
 
-# 👨‍💻 Developer
+# 👨‍💻 Author
 
-### Ayush Ashish
+## Ayush Ashish
 
-GitHub
+**GitHub**
 
 https://github.com/ayushashish21
 
-LinkedIn
+**LinkedIn**
 
 https://www.linkedin.com/in/n-ayush-ashish-119b95360/
 
 ---
 
-# 🎯 Goal
+# 📄 License
 
-Build a production-ready ride-hailing platform featuring:
-
-- Razorpay Payments
-- Live Navigation
-- Real-Time GPS Tracking
-- Ride History
-- Driver Earnings
-- Ratings & Reviews
-- Production Deployment
+This project is intended for **learning**, **portfolio**, and **educational** purposes.
 
 ---
 
-# 📄 License
+## ⭐ Support
 
-This project is developed for educational and portfolio purposes.
+If you found this project helpful or interesting, please consider giving it a **⭐ Star** on GitHub.
 
-Feel free to fork and contribute.
+It helps others discover the project and supports future development.
