@@ -11,10 +11,11 @@ import LiveTracking from "../components/LiveTracking";
 import 'remixicon/fonts/remixicon.css';
 import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [panelType, setPanelType] = useState("search");
   const [panelOpen, setPanelOpen] = useState(false);
@@ -35,6 +36,7 @@ const Home = () => {
   const [captainLocation, setCaptainLocation] = useState(null);
   const [recentSearches, setRecentSearches] = useState([]);
   const [popularLocations, setPopularLocations] = useState([]);
+  const [repeatedFrom, setRepeatedFrom] = useState(null);
 
 
 
@@ -48,6 +50,23 @@ const Home = () => {
     connect();
   }, [connect]);
 
+
+  useEffect(() => {
+    if (!location.state?.repeatRide) return;
+
+    const data = location.state.repeatRide;
+
+    setPickup(data.ride.pickup);
+    setDestination(data.ride.destination);
+    setRepeatedFrom(data.ride.repeatedFrom);
+
+    fetchFares(data.ride.pickup, data.ride.destination);
+
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [location, navigate]);
 
 
   useEffect(() => {
@@ -263,10 +282,11 @@ const Home = () => {
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/create`,
         {
-          pickup: pickup.trim(),
-          destination: destination.trim(),
+          pickup,
+          destination,
           vehicleType: selectedRide.vehicleType,
           paymentMethod,
+          repeatedFrom,
         },
         { headers }
       );

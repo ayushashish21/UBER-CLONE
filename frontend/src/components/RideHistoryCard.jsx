@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "remixicon/fonts/remixicon.css";
+import axios from "axios";
 
 const RideHistoryCard = ({ ride }) => {
     const [expanded, setExpanded] = useState(false);
+    const [repeating, setRepeating] = useState(false);
     const navigate = useNavigate();
 
     const vehicleName = {
@@ -64,6 +66,35 @@ const RideHistoryCard = ({ ride }) => {
         navigate(`/rides/${ride._id}`);
     };
 
+    const repeatRide = async () => {
+        if (repeating) return;
+
+        setRepeating(true);
+
+        try {
+            const token = localStorage.getItem("token");
+
+            const { data } = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/rides/repeat/${ride._id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            navigate("/home", {
+                state: {
+                    repeatRide: data
+                }
+            });
+        } catch (err) {
+            console.error(err.response?.data);
+        } finally {
+            setRepeating(false);
+        }
+    };
+
     return (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             {/* CLICKABLE HEADER */}
@@ -108,12 +139,18 @@ const RideHistoryCard = ({ ride }) => {
                         </span>
 
                         <div className="mt-2">
-
-                            <i
-                                className={`ri-arrow-${expanded ? "up" : "down"}-s-line text-xl transition-transform duration-300 ${expanded ? "rotate-180" : ""
-                                    }`}
-                            />
-
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpanded(!expanded);
+                                }}
+                                className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-slate-100 transition"
+                            >
+                                <i
+                                    className={`ri-arrow-${expanded ? "up" : "down"}-s-line text-xl transition-transform duration-300`}
+                                />
+                            </button>
                         </div>
 
                     </div>
@@ -286,15 +323,30 @@ const RideHistoryCard = ({ ride }) => {
 
                         {/* Footer */}
 
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setExpanded(false);
-                            }}
-                            className="w-full mt-6 py-3 rounded-xl bg-black text-white hover:bg-slate-800 transition-all duration-300 font-semibold flex items-center justify-center gap-2"                        >
-                            <i className="ri-eye-off-line" />
-                            Hide Details
-                        </button>
+                        <div className="grid grid-cols-2 gap-3 mt-6">
+                            <button
+                                disabled={repeating}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    repeatRide();
+                                }}
+                                className="py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <i className="ri-repeat-line"></i>
+                                {repeating ? "Loading..." : "Repeat Ride"}
+                            </button>
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpanded(false);
+                                }}
+                                className="py-3 rounded-xl bg-black text-white font-semibold hover:bg-slate-800 transition flex items-center justify-center gap-2"
+                            >
+                                <i className="ri-eye-off-line"></i>
+                                Hide Details
+                            </button>
+                        </div>
 
                     </div>
 

@@ -87,7 +87,20 @@ const rideSchema = new mongoose.Schema(
     completedAt: Date,
 
     paidAt: Date,
+
+    repeatCount: {
+      type: Number,
+      default: 0,
+    },
+
+    repeatedFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ride",
+      default: null,
+    },
+
   },
+
   {
     timestamps: true,
   }

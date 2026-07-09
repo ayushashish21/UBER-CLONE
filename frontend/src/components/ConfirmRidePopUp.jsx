@@ -1,39 +1,39 @@
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import "remixicon/fonts/remixicon.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "remixicon/fonts/remixicon.css";
 
 const ConfirmRidePopup = ({
+  ride,
   confirmRidePopupOpen,
   setConfirmRidePopupOpen,
   setRidePopupOpen,
-  ride,
 }) => {
-  const fullScreenRef = useRef(null);
+  const popupRef = useRef(null);
   const navigate = useNavigate();
 
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (confirmRidePopupOpen) {
-      gsap.to(fullScreenRef.current, {
+      gsap.to(popupRef.current, {
         y: 0,
-        duration: 0.6,
+        duration: 0.4,
         ease: "power3.out",
       });
     } else {
-      gsap.to(fullScreenRef.current, {
+      gsap.to(popupRef.current, {
         y: "100%",
-        duration: 0.5,
+        duration: 0.4,
         ease: "power3.in",
       });
 
+      setOtp("");
       setErrorMessage("");
       setLoading(false);
-      setOtp("");
     }
   }, [confirmRidePopupOpen]);
 
@@ -41,17 +41,12 @@ const ConfirmRidePopup = ({
     if (loading) return;
 
     setConfirmRidePopupOpen(false);
-
-    if (setRidePopupOpen) {
-      setRidePopupOpen(true);
-    }
+    setRidePopupOpen(true);
   };
 
   const handleStartRide = async () => {
-    if (!ride?._id || loading) return;
-
     if (!otp.trim()) {
-      setErrorMessage("Please enter the ride OTP.");
+      setErrorMessage("Please enter OTP.");
       return;
     }
 
@@ -61,7 +56,7 @@ const ConfirmRidePopup = ({
 
       const token = localStorage.getItem("token");
 
-      const response = await axios.post(
+      const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/start`,
         {
           rideId: ride._id,
@@ -76,12 +71,12 @@ const ConfirmRidePopup = ({
 
       navigate("/captain-riding", {
         state: {
-          ride: response.data,
+          ride: res.data,
         },
       });
-    } catch (error) {
+    } catch (err) {
       setErrorMessage(
-        error.response?.data?.error || "Invalid OTP."
+        err.response?.data?.error || "Invalid OTP."
       );
     } finally {
       setLoading(false);
@@ -90,173 +85,150 @@ const ConfirmRidePopup = ({
 
   return (
     <div
-      ref={fullScreenRef}
-      className="absolute inset-0 z-50 flex h-screen w-full translate-y-full flex-col justify-end bg-slate-900"
+      ref={popupRef}
+      className="fixed bottom-0 left-0 z-50 w-full translate-y-full rounded-t-3xl bg-white px-5 py-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
     >
-      <div className="h-[92vh] w-full rounded-t-[2.5rem] bg-white px-5 py-6 shadow-[0_-15px_40px_rgba(0,0,0,0.2)]">
+      {/* Drag Handle */}
 
-        {/* Header */}
+      <div className="absolute left-1/2 top-4 h-1.5 w-12 -translate-x-1/2 rounded-full bg-slate-200"></div>
 
-        <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-5">
-          <h2 className="text-3xl font-black text-slate-900">
-            Trip Details
-          </h2>
+      {/* Header */}
 
-          <button
-            onClick={handleCancel}
-            disabled={loading}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
-          >
-            <i className="ri-close-line text-3xl"></i>
-          </button>
-        </div>
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-900">
+          Trip Details
+        </h2>
 
-        {/* Passenger */}
+        <button
+          onClick={handleCancel}
+          disabled={loading}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+        >
+          <i className="ri-close-line text-2xl"></i>
+        </button>
+      </div>
 
-        <div className="mb-5 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-white shadow">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
-                alt="Passenger"
-                className="h-full w-full object-cover"
-              />
-            </div>
+      {/* Passenger */}
 
-            <div>
-              <h3 className="text-2xl font-bold capitalize">
-                {ride?.user?.fullname?.firstname}{" "}
-                {ride?.user?.fullname?.lastname}
-              </h3>
-
-              <p className="text-lg font-semibold text-emerald-600">
-                User
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ride Details */}
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-
-          <div className="flex gap-4">
-
-            <div className="flex flex-col items-center">
-              <i className="ri-map-pin-user-fill text-3xl text-blue-500"></i>
-              <div className="my-2 h-14 w-[2px] bg-slate-200"></div>
-              <i className="ri-map-pin-2-fill text-3xl text-red-500"></i>
-            </div>
-
-            <div className="flex-1">
-
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
-                  Pickup Location
-                </p>
-
-                <h4 className="mt-1 text-xl font-bold">
-                  {ride?.pickup}
-                </h4>
-              </div>
-
-              <div className="my-5 border-b border-slate-200"></div>
-
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
-                  Drop-off Location
-                </p>
-
-                <h4 className="mt-1 text-xl font-bold">
-                  {ride?.destination}
-                </h4>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-5">
-
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
-                Payment Method
-              </p>
-
-              <h4 className="text-xl font-bold capitalize">
-                {ride?.paymentMethod}
-              </h4>
-            </div>
-
-            <div className="text-right">
-              <p className="text-sm font-bold uppercase tracking-wide text-slate-400">
-                Fare
-              </p>
-
-              <h3 className="text-4xl font-black text-emerald-600">
-                ₹{ride?.fare}
-              </h3>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* OTP Card */}
-
-        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-          <p className="mb-4 text-xl font-medium text-slate-500">
-            Ride OTP
-          </p>
-
-          <input
-            type="text"
-            maxLength={6}
-            value={otp}
-            onChange={(e) =>
-              setOtp(e.target.value.replace(/\D/g, ""))
-            }
-            placeholder="Enter 6 digit OTP"
-            className="h-16 w-full rounded-2xl border border-slate-300 px-6 text-center text-2xl font-bold tracking-[0.35em] outline-none transition focus:border-black"
+      <div className="mb-5 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <img
+            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"
+            alt=""
+            className="h-12 w-12 rounded-full object-cover"
           />
 
-          <p className="mt-5 text-lg leading-7 text-slate-500">
-            Ask the passenger for the OTP before starting the ride.
+          <div>
+            <h3 className="text-lg font-bold capitalize">
+              {ride?.user?.fullname?.firstname}{" "}
+              {ride?.user?.fullname?.lastname}
+            </h3>
+
+            <p className="text-sm font-semibold text-emerald-600">
+              User
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Ride */}
+
+      <div className="relative mb-6 space-y-5 pl-6 before:absolute before:bottom-2 before:left-[11px] before:top-2 before:w-0.5 before:bg-slate-200">
+        <div className="relative">
+          <i className="ri-record-circle-fill absolute -left-6 top-0.5 text-xs text-blue-600 bg-white"></i>
+
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Pickup
           </p>
 
-        </div>
-
-        {errorMessage && (
-          <p className="mt-3 text-center font-semibold text-red-500">
-            {errorMessage}
+          <p className="mt-1 text-sm font-bold leading-tight text-slate-900 break-words">
+            {ride?.pickup}
           </p>
-        )}
-
-        {/* Buttons */}
-
-        <div className="mt-6 flex gap-4">
-
-          <button
-            onClick={handleCancel}
-            disabled={loading}
-            className="h-16 flex-1 rounded-3xl bg-slate-100 text-xl font-bold"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={handleStartRide}
-            disabled={loading}
-            className="h-16 flex-1 rounded-3xl bg-black text-xl font-bold text-white"
-          >
-            {loading
-              ? "Verifying..."
-              : "Verify OTP & Start Ride"}
-          </button>
-
         </div>
 
+        <div className="relative">
+          <i className="ri-map-pin-fill absolute -left-[26px] top-0 text-base text-red-500 bg-white"></i>
+
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Drop-off
+          </p>
+
+          <p className="mt-1 text-sm font-bold leading-tight text-slate-900 break-words">
+            {ride?.destination}
+          </p>
+        </div>
+      </div>
+
+      {/* Fare */}
+
+      <div className="mb-5 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Payment
+          </p>
+
+          <h4 className="text-lg font-bold capitalize">
+            {ride?.paymentMethod}
+          </h4>
+        </div>
+
+        <div className="text-right">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Fare
+          </p>
+
+          <h3 className="text-3xl font-black text-emerald-600">
+            ₹{ride?.fare}
+          </h3>
+        </div>
+      </div>
+
+      {/* OTP */}
+
+      <div className="mb-5">
+        <label className="mb-2 block text-sm font-semibold text-slate-500">
+          Ride OTP
+        </label>
+
+        <input
+          value={otp}
+          onChange={(e) =>
+            setOtp(e.target.value.replace(/\D/g, ""))
+          }
+          maxLength={6}
+          placeholder="Enter 6-digit OTP"
+          className="h-14 w-full rounded-2xl border border-slate-300 text-center text-xl font-bold tracking-[0.3em] outline-none focus:border-black"
+        />
+
+        <p className="mt-2 text-xs text-slate-500">
+          Ask the passenger for the OTP before starting the ride.
+        </p>
+      </div>
+
+      {errorMessage && (
+        <p className="mb-4 text-center text-sm font-semibold text-red-500">
+          {errorMessage}
+        </p>
+      )}
+
+      {/* Buttons */}
+
+      <div className="flex gap-4">
+        <button
+          onClick={handleCancel}
+          disabled={loading}
+          className="flex-1 rounded-2xl bg-slate-100 py-3.5 font-bold text-slate-700"
+        >
+          Back
+        </button>
+
+        <button
+          onClick={handleStartRide}
+          disabled={loading}
+          className="flex-[2] rounded-2xl bg-black py-3.5 font-bold text-white"
+        >
+          {loading ? "Verifying..." : "Start Ride"}
+        </button>
       </div>
     </div>
   );

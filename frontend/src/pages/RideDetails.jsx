@@ -128,8 +128,7 @@ const RideDetails = () => {
 
                 <RideSummaryCard ride={ride} />
 
-                <CaptainCard ride={ride} />
-
+                <CaptainCard captain={ride.captain} />
                 <PaymentCard ride={ride} />
 
                 <RideTimeline ride={ride} />

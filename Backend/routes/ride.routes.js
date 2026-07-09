@@ -61,6 +61,12 @@ router.get(
 );
 
 router.get(
+    "/repeat/:rideId",
+    authMiddleware.authUser,
+    rideController.repeatRide
+);
+
+router.get(
     "/:rideId",
     authMiddleware.authUser,
     rideController.getRideById

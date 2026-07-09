@@ -111,6 +111,7 @@ module.exports.createRide = async ({
     destination,
     vehicleType,
     paymentMethod,
+    repeatedFrom,
     userCountry
 }) => {
 
@@ -134,36 +135,32 @@ module.exports.createRide = async ({
     }
 
     const ride = await rideModel.create({
-
         user,
-
         pickup,
-
         destination,
-
         vehicleType,
-
         fare: fareResult.fare[vehicleType],
-
         distance: fareResult.distance,
-
         duration: fareResult.duration,
-
         paymentMethod,
-
+        repeatedFrom,
         otp: getOtp(6),
-
         status: "pending",
-
         acceptedAt: null,
-
         startedAt: null,
-
         completedAt: null,
-
         paidAt: null,
-
     });
+    if (repeatedFrom) {
+    await rideModel.findByIdAndUpdate(
+        repeatedFrom,
+        {
+            $inc: {
+                repeatCount: 1,
+            },
+        }
+    );
+}
 
     return ride;
 };
@@ -258,10 +255,10 @@ END RIDE
 module.exports.endRide = async ({
     rideId,
     captain,
-    
+
 }) => {
 
-    if (!rideId || !captain ) {
+    if (!rideId || !captain) {
         throw new Error("Ride ID, Captain are required.");
     }
 
@@ -278,7 +275,7 @@ module.exports.endRide = async ({
         throw new Error("Ride not found.");
     }
 
-    
+
 
     ride.status = "completed";
     ride.completedAt = new Date();

@@ -24,6 +24,7 @@ module.exports.createRide = async (req, res) => {
         destination,
         vehicleType,
         paymentMethod,
+        repeatedFrom,
     } = req.body;
 
     console.log(
@@ -45,7 +46,8 @@ module.exports.createRide = async (req, res) => {
             destination,
             vehicleType,
             paymentMethod,
-            userCountry
+            repeatedFrom,
+            userCountry,
         });
 
         console.log(
@@ -224,13 +226,13 @@ module.exports.endRide = async (req, res) => {
         });
     }
 
-    const { rideId, otp } = req.body;
+    const { rideId } = req.body;
 
     try {
         const ride = await rideService.endRide({
             rideId,
             captain: req.captain,
-            
+
         });
 
         if (ride.user && ride.user.socketId) {
@@ -292,6 +294,50 @@ module.exports.getRideById = async (req, res) => {
         return res.status(404).json({
             success: false,
             message: error.message,
+        });
+    }
+};
+
+/*
+=========================================
+REPEAT RIDE
+=========================================
+*/
+module.exports.repeatRide = async (req, res) => {
+    try {
+        const ride = await rideService.getRideById({
+            rideId: req.params.rideId,
+            userId: req.user._id
+        });
+
+
+
+        const user = await userModel.findById(req.user._id);
+
+        const fareResult = await rideService.getFare(
+            ride.pickup,
+            ride.destination,
+            user?.country || "IN"
+        );
+
+        return res.status(200).json({
+            success: true,
+
+            ride: {
+                pickup: ride.pickup,
+                destination: ride.destination,
+                vehicleType: ride.vehicleType,
+                paymentMethod: ride.paymentMethod,
+                repeatedFrom: ride._id
+            },
+
+            fare: fareResult.fare
+        });
+
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: err.message
         });
     }
 };
