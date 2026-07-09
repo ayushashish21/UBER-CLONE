@@ -33,20 +33,23 @@ const Home = () => {
 
   const [confirmedRideData, setConfirmedRideData] = useState(null);
   const [captainLocation, setCaptainLocation] = useState(null);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [popularLocations, setPopularLocations] = useState([]);
+
+
 
   const { connect, sendMessage, receiveMessage, isConnected } = useContext(SocketContext);
   const { user } = useContext(UserDataContext);
+
+
+
 
   useEffect(() => {
     connect();
   }, [connect]);
 
-  // FIX: This effect previously only re-ran when `user` changed. If the socket
-  // was still mid-handshake when `user._id` became available, sendMessage()
-  // would silently no-op (socket not connected yet) and the join was lost
-  // forever for that session — this is why the rider never received
-  // 'ride-confirmed' and stayed stuck on "Looking for a Driver". Now it also
-  // re-fires once the socket actually finishes connecting.
+
+
   useEffect(() => {
     if (!user || !user._id) return;
     if (!isConnected) return;
@@ -110,6 +113,8 @@ const Home = () => {
       setIsLoadingSuggestions(false);
       return;
     }
+
+
 
     const timeoutId = setTimeout(async () => {
       setIsLoadingSuggestions(true);
@@ -199,6 +204,36 @@ const Home = () => {
     setSearchSuggestions([]);
   };
 
+  const fetchSearchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+
+      const [recentRes, popularRes] = await Promise.all([
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/search/recent`,
+          { headers }
+        ),
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/search/popular`,
+          { headers }
+        ),
+      ]);
+
+      setRecentSearches(recentRes.data || []);
+      setPopularLocations(popularRes.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSearchData();
+  }, []);
+
   const handleFindTrip = () => {
     if (pickup && destination) {
       fetchFares(pickup, destination);
@@ -235,6 +270,17 @@ const Home = () => {
         },
         { headers }
       );
+
+      // Save this route in Recent Searches
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/search/save`,
+        {
+          pickup: pickup.trim(),
+          destination: destination.trim(),
+        },
+        { headers }
+      );
+      await fetchSearchData();
 
       setRideError("");
       setPanelType("looking");
@@ -417,6 +463,8 @@ const Home = () => {
                 currentField={activeField}
                 suggestions={searchSuggestions}
                 loading={isLoadingSuggestions}
+                recentSearches={recentSearches}
+                popularLocations={popularLocations}
               />
             )}
 

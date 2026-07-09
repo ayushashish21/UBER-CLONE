@@ -32,6 +32,24 @@ const userSchema = new mongoose.Schema({
         minlength: [2, 'Country code must be exactly 2 characters'],
         maxlength: [2, 'Country code must be exactly 2 characters']
     },
+    recentSearches: [
+    {
+        pickup: {
+            type: String,
+            required: true
+        },
+
+        destination: {
+            type: String,
+            required: true
+        },
+
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }
+],
     socketId: {
         type: String,
     }
