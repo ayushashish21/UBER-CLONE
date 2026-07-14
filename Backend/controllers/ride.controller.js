@@ -4,6 +4,7 @@ const { sendMessageToSocketId } = require("../socket");
 const mapService = require("../services/maps.service");
 const rideModel = require("../models/ride.model");
 const userModel = require("../models/user.model");
+const { emitDashboardUpdate } = require("../utils/dashboardSocket");
 
 /*
 =========================================
@@ -164,6 +165,7 @@ module.exports.confirmRide = async (req, res) => {
                 confirmedRide
             );
         }
+        await emitDashboardUpdate(req.captain._id);
 
         return res.status(200).json(confirmedRide);
     } catch (err) {
@@ -203,7 +205,7 @@ module.exports.startRide = async (req, res) => {
                 ride
             );
         }
-
+await emitDashboardUpdate(req.captain._id);
         return res.status(200).json(ride);
     } catch (err) {
         return res.status(400).json({
@@ -242,6 +244,7 @@ module.exports.endRide = async (req, res) => {
                 ride
             );
         }
+        await emitDashboardUpdate(req.captain._id);
 
         return res.status(200).json(ride);
     } catch (err) {
@@ -253,7 +256,7 @@ module.exports.endRide = async (req, res) => {
 
 /*
 =========================================
-GET RIDE HISTORY
+GET RIDE HISTORY (rider)
 =========================================
 */
 module.exports.getRideHistory = async (req, res) => {
@@ -265,6 +268,77 @@ module.exports.getRideHistory = async (req, res) => {
         return res.status(200).json({
             success: true,
             rides,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+/*
+=========================================
+GET RIDE HISTORY (captain)
+=========================================
+*/
+module.exports.getCaptainRideHistory = async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            errors: errors.array(),
+        });
+    }
+
+    const { status, range } = req.query;
+
+    try {
+        const rides = await rideService.getCaptainRideHistory({
+            captainId: req.captain._id,
+            status,
+            range,
+        });
+
+        return res.status(200).json({
+            success: true,
+            rides,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+/*
+=========================================
+GET CAPTAIN WALLET
+=========================================
+*/
+module.exports.getCaptainWallet = async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            errors: errors.array(),
+        });
+    }
+
+    const { range, startDate, endDate } = req.query;
+
+    try {
+        const wallet = await rideService.getCaptainWallet({
+            captainId: req.captain._id,
+            range,
+            startDate,
+            endDate,
+        });
+
+        return res.status(200).json({
+            success: true,
+            ...wallet,
         });
     } catch (error) {
         return res.status(500).json({

@@ -6,6 +6,8 @@ const RideHistoryHeader = ({
   totalRides = 0,
   search,
   setSearch,
+  backTo = "/home",
+  placeholder = "Search pickup, destination...",
 }) => {
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ const RideHistoryHeader = ({
       <div className="flex items-center justify-between px-5 pt-5">
 
         <button
-          onClick={() => navigate("/home")}
+          onClick={() => navigate(backTo)}
           className="h-11 w-11 rounded-full bg-slate-100 hover:bg-slate-200 transition flex items-center justify-center cursor-pointer"
         >
           <i className="ri-arrow-left-line text-xl"></i>
@@ -51,7 +53,7 @@ const RideHistoryHeader = ({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search pickup, destination..."
+            placeholder={placeholder}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 outline-none transition focus:border-black focus:ring-2 focus:ring-black"
           />
 

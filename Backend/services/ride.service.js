@@ -102,6 +102,35 @@ function getOtp(length) {
 
 /*
 =========================================
+DATE RANGE HELPER (for ride history filters)
+=========================================
+*/
+function getDateThreshold(range) {
+    const now = new Date();
+
+    switch (range) {
+        case "today": {
+            const start = new Date(now);
+            start.setHours(0, 0, 0, 0);
+            return start;
+        }
+        case "week": {
+            const start = new Date(now);
+            start.setDate(start.getDate() - 7);
+            return start;
+        }
+        case "month": {
+            const start = new Date(now);
+            start.setDate(start.getDate() - 30);
+            return start;
+        }
+        default:
+            return null;
+    }
+}
+
+/*
+=========================================
 CREATE RIDE
 =========================================
 */
@@ -350,6 +379,323 @@ module.exports.getRideHistory = async (userId) => {
         .sort({ createdAt: -1 });
 
     return rides;
+};
+
+/*
+=========================================
+GET CAPTAIN RIDE HISTORY
+=========================================
+*/
+module.exports.getCaptainRideHistory = async ({
+    captainId,
+    status,
+    range,
+}) => {
+
+    if (!captainId) {
+        throw new Error("Captain ID is required.");
+    }
+
+    const query = { captain: captainId };
+
+    if (status && status !== "all") {
+        query.status = status;
+    }
+
+    const threshold = getDateThreshold(range);
+
+    if (threshold) {
+        query.createdAt = { $gte: threshold };
+    }
+
+    const rides = await rideModel
+        .find(query)
+        .populate({
+            path: "user",
+            select: "fullname email",
+        })
+        .sort({ createdAt: -1 });
+
+    return rides;
+};
+
+/*
+=========================================
+CAPTAIN WALLET — derived entirely from completed rides.
+No Wallet collection: everything below is computed on read.
+=========================================
+*/
+function startOfDay(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function sumFares(rides) {
+    return rides.reduce((total, ride) => total + (ride.fare || 0), 0);
+}
+
+module.exports.getCaptainWallet = async ({ captainId, range, from, to }) => {
+    if (!captainId) {
+        throw new Error("Captain ID is required.");
+    }
+
+    const completedRides = await rideModel
+        .find({ captain: captainId, status: "completed" })
+        .populate({ path: "user", select: "fullname" })
+        .sort({ createdAt: -1 });
+
+    const now = new Date();
+    const todayStart = startOfDay(now);
+
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    const monthStart = new Date(now);
+    monthStart.setDate(monthStart.getDate() - 30);
+
+    const todayEarnings = sumFares(
+        completedRides.filter((r) => new Date(r.createdAt) >= todayStart)
+    );
+    const weekEarnings = sumFares(
+        completedRides.filter((r) => new Date(r.createdAt) >= weekStart)
+    );
+    const monthEarnings = sumFares(
+        completedRides.filter((r) => new Date(r.createdAt) >= monthStart)
+    );
+
+    // No withdrawal ledger exists yet, so "available balance" is lifetime
+    // completed-ride earnings. Once withdrawals are persisted somewhere,
+    // subtract the withdrawn total from this.
+    const availableBalance = sumFares(completedRides);
+
+    // Last 7 calendar days, oldest -> newest, for the chart.
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+        const day = new Date(now);
+        day.setDate(day.getDate() - i);
+        const dayStart = startOfDay(day);
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+
+        const total = sumFares(
+            completedRides.filter((r) => {
+                const created = new Date(r.createdAt);
+                return created >= dayStart && created < dayEnd;
+            })
+        );
+
+        last7Days.push({
+            date: dayStart.toISOString().slice(0, 10),
+            label: dayStart.toLocaleDateString("en-IN", { weekday: "short" }),
+            total,
+        });
+    }
+
+    // Only cash/online exist as real paymentMethod values in this schema.
+    const paymentBreakdown = {
+        cash: sumFares(completedRides.filter((r) => r.paymentMethod === "cash")),
+        online: sumFares(completedRides.filter((r) => r.paymentMethod === "online")),
+    };
+
+    // Transaction list respects the range/custom filter; summary cards
+    // above always reflect their fixed windows regardless of this filter.
+    let transactionRides = completedRides;
+
+    if (range === "today") {
+        transactionRides = transactionRides.filter((r) => new Date(r.createdAt) >= todayStart);
+    } else if (range === "week") {
+        transactionRides = transactionRides.filter((r) => new Date(r.createdAt) >= weekStart);
+    } else if (range === "month") {
+        transactionRides = transactionRides.filter((r) => new Date(r.createdAt) >= monthStart);
+    } else if (range === "custom" && from) {
+        const fromDate = startOfDay(new Date(from));
+        const toDate = to ? new Date(to) : now;
+        toDate.setHours(23, 59, 59, 999);
+
+        transactionRides = transactionRides.filter((r) => {
+            const created = new Date(r.createdAt);
+            return created >= fromDate && created <= toDate;
+        });
+    }
+
+    const transactions = transactionRides.map((ride) => ({
+        id: ride._id,
+        passenger: ride.user
+            ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}`
+            : "Rider unavailable",
+        pickup: ride.pickup,
+        destination: ride.destination,
+        amount: ride.fare,
+        paymentMethod: ride.paymentMethod,
+        paymentStatus: ride.paymentStatus,
+        status: ride.status,
+        date: ride.completedAt || ride.createdAt,
+    }));
+
+    return {
+        availableBalance,
+        todayEarnings,
+        weekEarnings,
+        monthEarnings,
+        last7Days,
+        paymentBreakdown,
+        // No persisted withdrawal record exists — always null from the
+        // backend until a real withdrawal ledger is added.
+        lastWithdrawal: null,
+        transactions,
+    };
+};
+
+/*
+=========================================
+GET CAPTAIN WALLET
+
+No separate Wallet model — everything here is derived from the
+Ride collection at request time. That means:
+  - "availableBalance" is the sum of every completed ride whose
+    paymentStatus is "paid" (cash rides are marked paid the moment
+    the ride ends; online rides are marked paid once markRideAsPaid
+    runs after the Razorpay webhook/verify step).
+  - There is no record of past withdrawals anywhere, so this
+    function cannot report a "last withdrawal" — that needs its own
+    persisted record once withdrawals are actually implemented.
+=========================================
+*/
+module.exports.getCaptainWallet = async ({
+    captainId,
+    range,
+    startDate,
+    endDate,
+}) => {
+
+    if (!captainId) {
+        throw new Error("Captain ID is required.");
+    }
+
+    const allCompletedRides = await rideModel
+        .find({ captain: captainId, status: "completed" })
+        .populate({
+            path: "user",
+            select: "fullname email",
+        })
+        .sort({ completedAt: -1 });
+
+    const paidRides = allCompletedRides.filter(
+        (ride) => ride.paymentStatus === "paid"
+    );
+
+    const sumFare = (rides) =>
+        rides.reduce((total, ride) => total + (ride.fare || 0), 0);
+
+    const now = new Date();
+
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const weekThreshold = getDateThreshold("week");
+    const monthThreshold = getDateThreshold("month");
+
+    const isOnOrAfter = (date, threshold) =>
+        date && threshold && new Date(date) >= threshold;
+
+    const availableBalance = sumFare(paidRides);
+
+    const todayEarnings = sumFare(
+        paidRides.filter((ride) => isOnOrAfter(ride.completedAt, startOfToday))
+    );
+
+    const weekEarnings = sumFare(
+        paidRides.filter((ride) => isOnOrAfter(ride.completedAt, weekThreshold))
+    );
+
+    const monthEarnings = sumFare(
+        paidRides.filter((ride) => isOnOrAfter(ride.completedAt, monthThreshold))
+    );
+
+    // Last 7 calendar days (oldest -> newest) for the earnings chart.
+    const chart = [];
+
+    for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date(now);
+        dayStart.setDate(now.getDate() - i);
+        dayStart.setHours(0, 0, 0, 0);
+
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayStart.getDate() + 1);
+
+        const dayTotal = sumFare(
+            paidRides.filter((ride) => {
+                if (!ride.completedAt) return false;
+                const completed = new Date(ride.completedAt);
+                return completed >= dayStart && completed < dayEnd;
+            })
+        );
+
+        chart.push({
+            date: dayStart.toISOString(),
+            label: dayStart.toLocaleDateString("en-IN", { weekday: "short" }),
+            amount: dayTotal,
+        });
+    }
+
+    // Grouped by whatever paymentMethod values actually show up in the
+    // data (currently "cash" / "online" per the ride model) rather than
+    // a fixed list, so this doesn't silently omit a method later.
+    const paymentBreakdown = paidRides.reduce((acc, ride) => {
+        const method = ride.paymentMethod || "unknown";
+        acc[method] = (acc[method] || 0) + (ride.fare || 0);
+        return acc;
+    }, {});
+
+    // The transaction list respects the range/custom filter; the summary
+    // cards above always reflect true totals regardless of this filter.
+    let transactionRides = allCompletedRides;
+
+    if (range === "custom" && (startDate || endDate)) {
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        transactionRides = transactionRides.filter((ride) => {
+            if (!ride.completedAt) return false;
+            const completed = new Date(ride.completedAt);
+            if (start && completed < start) return false;
+            if (end && completed > end) return false;
+            return true;
+        });
+    } else if (range && range !== "all" && range !== "custom") {
+        const threshold = getDateThreshold(range);
+
+        if (threshold) {
+            transactionRides = transactionRides.filter(
+                (ride) => ride.completedAt && new Date(ride.completedAt) >= threshold
+            );
+        }
+    }
+
+    const transactions = transactionRides.map((ride) => ({
+        id: ride._id,
+        passenger: ride.user
+            ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}`
+            : "Rider unavailable",
+        pickup: ride.pickup,
+        destination: ride.destination,
+        amount: ride.fare,
+        paymentMethod: ride.paymentMethod,
+        paymentStatus: ride.paymentStatus,
+        status: ride.status,
+        date: ride.completedAt || ride.createdAt,
+    }));
+
+    return {
+        availableBalance,
+        todayEarnings,
+        weekEarnings,
+        monthEarnings,
+        chart,
+        paymentBreakdown,
+        transactions,
+    };
 };
 
 /*

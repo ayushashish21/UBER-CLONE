@@ -16,6 +16,8 @@ import CaptainRiding from './pages/CaptainRiding'
 import Payment from './pages/Payment'
 import RideHistory from "./pages/RideHistory";
 import RideDetails from "./pages/RideDetails";
+import CaptainRideHistory from "./pages/CaptainRideHistory";
+import CaptainWallet from "./pages/CaptainWallet";
 
 /**
  * Main App Component
@@ -62,6 +64,16 @@ const App = () => {
               <RideHistory />
             </UserProtectWrapper>
           }
+        />
+
+        <Route
+          path="/captain-ride-history"
+          element={<CaptainRideHistory />}
+        />
+
+        <Route
+          path="/captain-wallet"
+          element={<CaptainWallet />}
         />
 
         <Route path='/user/logout' element={<UserProtectWrapper>

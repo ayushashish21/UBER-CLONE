@@ -60,10 +60,46 @@ router.get(
     rideController.getRideHistory
 );
 
+// Captain-side ride history — placed before "/:rideId" so the
+// literal path isn't swallowed by the param route below.
+router.get(
+    "/captain-history",
+    authMiddleware.authCaptain,
+    query("status")
+        .optional()
+        .isIn(["pending", "accepted", "ongoing", "completed", "cancelled", "all"])
+        .withMessage("Invalid status"),
+    query("range")
+        .optional()
+        .isIn(["today", "week", "month", "all"])
+        .withMessage("Invalid range"),
+    rideController.getCaptainRideHistory
+);
+
 router.get(
     "/repeat/:rideId",
     authMiddleware.authUser,
     rideController.repeatRide
+);
+
+// Captain wallet / earnings dashboard — derived entirely from completed
+// rides, no separate Wallet collection.
+router.get(
+    "/captain-wallet",
+    authMiddleware.authCaptain,
+    query("range")
+        .optional()
+        .isIn(["today", "week", "month", "custom", "all"])
+        .withMessage("Invalid range"),
+    query("startDate")
+        .optional()
+        .isISO8601()
+        .withMessage("startDate must be a valid date"),
+    query("endDate")
+        .optional()
+        .isISO8601()
+        .withMessage("endDate must be a valid date"),
+    rideController.getCaptainWallet
 );
 
 router.get(

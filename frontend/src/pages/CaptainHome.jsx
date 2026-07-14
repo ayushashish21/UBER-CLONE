@@ -6,7 +6,7 @@ import CaptainDetails from "../components/CaptainDetails";
 import RidePopup from "../components/RidePopup";
 import ConfirmRidePopup from "../components/ConfirmRidePopup";
 import LiveTracking from "../components/LiveTracking";
-
+import { getCaptainDashboard } from "../services/dashboardService";
 import { SocketContext } from "../context/SocketContext";
 import { useCaptainContext } from "../context/CaptainContext";
 
@@ -15,6 +15,7 @@ const CaptainHome = () => {
   const [confirmRidePopupOpen, setConfirmRidePopupOpen] = useState(false);
   const [rideData, setRideData] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
 
   const {
     connect,
@@ -110,6 +111,47 @@ const CaptainHome = () => {
     return cleanup;
   }, [receiveMessage]);
 
+  useEffect(() => {
+
+    const cleanup = receiveMessage(
+
+      "dashboard-update",
+
+      (dashboardData) => {
+
+        console.log(
+          "[SOCKET] Dashboard Updated",
+          dashboardData
+        );
+
+        setDashboard(dashboardData);
+
+      }
+
+    );
+
+    return cleanup;
+
+  }, [receiveMessage]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const data = await getCaptainDashboard();
+        setDashboard(data);
+      } catch (err) {
+        console.error("Dashboard Load Error", err);
+      }
+    };
+
+    if (captain?._id) {
+
+      loadDashboard();
+
+    }
+
+  }, [captain]);
+
   // Accept ride
   const handleAcceptRide = async () => {
     if (!rideData?._id) return;
@@ -160,8 +202,11 @@ const CaptainHome = () => {
         <LiveTracking captainLocation={currentLocation} />
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-white px-6 py-6 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] border-t border-slate-200">
-        <CaptainDetails captain={captain} />
+      <div className="absolute bottom-0 left-0 right-0 rounded-t-[32px] bg-white/90 backdrop-blur-xl border-t border-white/40 px-6 py-6 shadow-[0_-20px_60px_rgba(0,0,0,0.15)]">
+        <CaptainDetails
+          captain={captain}
+          dashboard={dashboard}
+        />
       </div>
 
       <RidePopup

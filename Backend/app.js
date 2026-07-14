@@ -12,6 +12,7 @@ const mapsRoutes = require('./routes/maps.routes');
 const rideRoutes = require('./routes/ride.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const searchRoutes = require("./routes/search.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const app = express();
 
@@ -38,5 +39,6 @@ app.use('/maps', mapsRoutes);
 app.use('/rides', rideRoutes);
 app.use('/payments', paymentRoutes);
 app.use("/search", searchRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 module.exports = app;
