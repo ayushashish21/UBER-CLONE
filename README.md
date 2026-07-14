@@ -9,7 +9,7 @@
 ![Mapbox](https://img.shields.io/badge/Mapbox-Maps-000000?logo=mapbox)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-A modern **full-stack Uber Clone** built with the **MERN Stack**, featuring **real-time ride booking**, **live captain updates**, **OTP-based ride completion**, **online payments with Razorpay**, **Mapbox integration**, **ride history**, and a responsive user experience.
+A modern **full-stack Uber Clone** built with the **MERN Stack**, featuring **real-time ride booking**, **live captain updates**, **OTP-based ride completion**, **online payments with Razorpay**, **Mapbox integration**, **ride history for both riders and captains**, a **captain earnings & wallet dashboard**, and a responsive user experience.
 
 ---
 
@@ -57,6 +57,9 @@ https://ayushashish21.github.io/UBER-CLONE/
 - Ride Completion via OTP
 - View Ride Details
 - Live Ride Workflow
+- Live Dashboard — total rides, earnings, and distance driven, updating in real time via Socket.IO as rides complete
+- Ride History — search, filter by status and date range (Today / Week / Month), sort by newest, oldest, or fare
+- Wallet & Earnings Dashboard — available balance, today/week/month totals, a 7-day earnings chart, payment method breakdown, and a searchable transaction list
 
 ---
 
@@ -70,6 +73,7 @@ Powered by **Socket.IO**
 - Ride Acceptance Updates
 - OTP Verification Events
 - Ride Completion Events
+- Live Dashboard Updates (captain's ride count / earnings refresh the moment a ride completes, no page reload needed)
 
 ---
 
@@ -86,7 +90,7 @@ Integrated using **Razorpay**
 
 ---
 
-## 📜 Ride History
+## 📜 User Ride History
 
 Users can
 
@@ -96,6 +100,36 @@ Users can
 - Open Ride Details
 - View Payment Status
 - Access Completed Trips
+- Repeat a Past Ride
+
+---
+
+## 📜 Captain Ride History
+
+Captains can
+
+- View Every Ride They've Driven, Most Recent First
+- Filter by Status (Pending / Accepted / Ongoing / Completed / Cancelled)
+- Filter by Date Range (Today / Week / Month)
+- Sort by Newest, Oldest, Highest Fare, or Lowest Fare
+- Search by Rider Name, Pickup, or Destination
+- Expand Any Ride for the Full Timeline (created → accepted → started → completed → paid) and Payment Status
+
+---
+
+## 💰 Captain Wallet & Earnings
+
+A dedicated earnings dashboard for captains, calculated entirely from completed rides (no separate wallet ledger):
+
+- Available Balance — total of all paid, completed rides
+- Today / This Week / This Month earnings summaries
+- 7-Day Earnings Chart
+- Payment Method Breakdown (Cash / Online)
+- Transaction List — one entry per completed ride, with passenger, pickup, destination, amount, payment method, and timestamp
+- Search Transactions by Passenger, Location, or Transaction ID
+- Filter Transactions by Today / Week / Month / Custom Date Range
+
+> Withdrawals aren't implemented yet — the dashboard reports the balance but there's no payout flow or withdrawal history behind it. See **Future Improvements**.
 
 ---
 
@@ -147,7 +181,7 @@ OTP Verification
 Ride Completed
       │
       ▼
-Ride Saved in History
+Ride Saved in History (User + Captain) & Reflected in Captain's Wallet
 ```
 
 ---
@@ -162,6 +196,7 @@ Ride Saved in History
 - Tailwind CSS
 - Axios
 - GSAP
+- Framer Motion
 - Mapbox GL JS
 - Remix Icons
 - Socket.IO Client
@@ -195,10 +230,18 @@ UBER-CLONE
 ├── Backend
 │   ├── config
 │   ├── controllers
+│   │   ├── ride.controller.js       # createRide, getFare, confirm/start/end,
+│   │   │                             # getRideHistory, getCaptainRideHistory,
+│   │   │                             # getCaptainWallet, getRideById, repeatRide
+│   │   └── ...
 │   ├── middleware
 │   ├── models
 │   ├── routes
+│   │   ├── ride.routes.js           # includes /captain-history, /captain-wallet
+│   │   └── ...
 │   ├── services
+│   │   ├── ride.service.js          # includes getCaptainRideHistory, getCaptainWallet
+│   │   └── ...
 │   ├── sockets
 │   ├── utils
 │   ├── app.js
@@ -207,13 +250,42 @@ UBER-CLONE
 ├── frontend
 │   ├── public
 │   ├── src
-│   │
-│   ├── assets
-│   ├── components
-│   ├── context
-│   ├── pages
-│   ├── App.jsx
-│   └── main.jsx
+│   │   ├── assets
+│   │   ├── components
+│   │   │   ├── CaptainDetails.jsx        # captain dashboard sheet (stats + quick actions)
+│   │   │   ├── CaptainCard.jsx
+│   │   │   ├── AnimatedNumber.jsx
+│   │   │   ├── RideHistoryCard.jsx       # rider-side ride card
+│   │   │   ├── CaptainRideHistoryCard.jsx# captain-side ride card
+│   │   │   ├── RideHistoryHeader.jsx
+│   │   │   ├── RideHistorySkeleton.jsx
+│   │   │   ├── RideStatusFilter.jsx
+│   │   │   ├── RideDateRangeFilter.jsx
+│   │   │   ├── RideSortDropdown.jsx
+│   │   │   ├── EmptyRideHistory.jsx
+│   │   │   ├── Wallet/
+│   │   │   │   ├── WalletHeader.jsx
+│   │   │   │   ├── BalanceCard.jsx
+│   │   │   │   ├── WalletSummary.jsx
+│   │   │   │   ├── EarningsChart.jsx
+│   │   │   │   ├── TransactionHistory.jsx
+│   │   │   │   ├── TransactionCard.jsx
+│   │   │   │   └── WalletSkeleton.jsx
+│   │   │   └── ...
+│   │   ├── context
+│   │   │   ├── SocketContext.jsx
+│   │   │   └── CaptainContext.jsx
+│   │   ├── pages
+│   │   │   ├── CaptainHome.jsx
+│   │   │   ├── CaptainRideHistory.jsx
+│   │   │   ├── CaptainWallet.jsx
+│   │   │   ├── RideHistory.jsx
+│   │   │   ├── RideDetails.jsx
+│   │   │   └── ...
+│   │   ├── services
+│   │   │   └── dashboardService.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
 │
 ├── .gitignore
 ├── package.json
@@ -315,10 +387,26 @@ Backend APIs include
 - Ride Booking
 - Fare Estimation
 - Ride Management
-- Ride History
+- Ride History (User & Captain)
+- Captain Wallet / Earnings
 - Payment
 - OTP Verification
 - Maps & Geolocation
+
+## Ride Endpoints
+
+| Method | Endpoint                | Auth    | Description                                              |
+| ------ | ------------------------ | ------- | ---------------------------------------------------------- |
+| POST   | `/rides/create`          | User    | Create a new ride and notify nearby captains               |
+| GET    | `/rides/get-fare`        | User    | Estimate fare for a pickup/destination pair                |
+| POST   | `/rides/confirm`         | Captain | Accept a pending ride                                      |
+| POST   | `/rides/start`           | Captain | Start a ride after OTP verification                        |
+| POST   | `/rides/end`             | Captain | Mark a ride completed                                      |
+| GET    | `/rides/history`         | User    | Rider's own ride history                                   |
+| GET    | `/rides/captain-history` | Captain | Captain's ride history — `status` and `range` filters      |
+| GET    | `/rides/captain-wallet`  | Captain | Balance, earnings summary, chart, transactions — `range`, `startDate`, `endDate` filters |
+| GET    | `/rides/repeat/:rideId`  | User    | Re-fetch fare/details to repeat a past ride                 |
+| GET    | `/rides/:rideId`         | User    | Single ride details                                         |
 
 ---
 
@@ -388,7 +476,7 @@ Deployable on
 - Push Notifications
 - Scheduled Rides
 - Multiple Payment Methods
-- Driver Earnings Dashboard
+- Captain Payout / Withdrawal Flow (balance is currently display-only)
 - Admin Dashboard
 - Promo Codes
 - Dark Mode
@@ -410,6 +498,7 @@ Deployable on
 - Responsive UI Development
 - Component-Based Architecture
 - State Management
+- Data Visualization (custom SVG charts)
 - Git & GitHub
 - Deployment
 - Environment Variable Management
